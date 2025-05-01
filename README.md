@@ -32,6 +32,5 @@ sudo systemctl enable docker
   http://{public-ip}:5000
   ```
 
-### Application Architecture Diagram
-
-[Image will be placed here]
+## Example
+![Example](https://github.com/user-attachments/assets/38c57c87-a6b2-4bd7-89ad-abafe33f9584)
