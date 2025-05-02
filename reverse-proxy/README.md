@@ -1,11 +1,21 @@
 # Reverse Proxy
 
-Deploy the BookStore Monolithic application on a Virtual Machine on AWS, with its own domain, SSL certificate and reverse proxy on NGINX. Our domain is `p2-tet.duckdns.org` and we have the following subdomains:
-- `objective1.p2-tet.duckdns.org` for the objective 1 application deploying a monolithic application.
-- `objective2.p2-tet.duckdns.org` for the objective 2 application deploying a scaled application with automatic scaling.
-- `objective3.p2-tet.duckdns.org` for the objective 3 application deploying a microservices application with automatic scaling.
-- `*.p2-tet.duckdns.org` for the objective 3 application deploying a microservices application with automatic scaling.
-- `p2-tet.duckdns.org` for the objective 3 application deploying a microservices application with automatic scaling.
+Deploy the BookStore Monolithic application on a Virtual Machine on AWS, with its own domain, SSL certificate and reverse proxy on NGINX. Our domain is `p2-tet-bookstore.duckdns.org` and we have the following subdomains:
+- `objective1.p2-tet-bookstore.duckdns.org` for the objective 1 application deploying a monolithic application.
+- `objective2.p2-tet-bookstore.duckdns.org` for the objective 2 application deploying a scaled application with automatic scaling.
+- `objective3.p2-tet-bookstore.duckdns.org` for the objective 3 application deploying a microservices application with automatic scaling.
+- `*.p2-tet-bookstore.duckdns.org` for the objective 3 application deploying a microservices application with automatic scaling.
+- `p2-tet-bookstore.duckdns.org` for the objective 3 application deploying a microservices application with automatic scaling.
+
+## Table of Contents
+- [Reverse Proxy](#reverse-proxy)
+- [Table of Contents](#table-of-contents)
+- [Deploying Reverse Proxy on AWS](#deploying-reverse-proxy-on-aws)
+  - [Launching an EC2 Instance](#launching-an-ec2-instance)
+  - [Installing Docker and Docker Compose](#installing-docker-and-docker-compose)
+  - [Domain](#domain)
+  - [SSL Certificate (DuckDNS)](#ssl-certificate-duckdns)
+  - [Executing Inverse Proxy](#executing-inverse-proxy)
 
 
 ## Deploying Reverse Proxy on AWS
@@ -74,23 +84,34 @@ nslookup your-domain.com
 6. Continue with the SSL certificate setup and inverse proxy configuration at [Reverse Proxy](../reverse-proxy/README.md)
 
 ### SSL Certificate (DuckDNS)
-1. Clone the repository:
-```bash
-git clone https://github.com/JuanFelipeRestrepoBuitrago/project-2-tet.git
-cd project-2-tet/reverse-proxy
-```
+1. Execute the docker compose first to create the container, follow the steps at [Executing Inverse Proxy](#executing-inverse-proxy):
+
 2. Run the following docker command for each domain or sub domain you want to secure:
 ```bash
-docker run --rm -e "DuckDNS_Token=your_duckdns_token" -v $(pwd)/data/acme.sh:/acme.sh neilpang/acme.sh:latest --issue --server https://acme-v02.api.letsencrypt.org/directory --dns dns_duckdns -d 'your_domain.com'
+docker exec acme-renewer acme.sh --issue --server https://acme-v02.api.letsencrypt.org/directory --dns dns_duckdns -d your_domain.duckdns.org --home /acme.sh --reloadcmd "/reload_nginx.sh"
+```
+
+**Note:** You should run this command for each subdomain you want or you can run twice with the `*.your_domain.com` wildcard to secure all subdomains and `your_domain.com` to secure the main domain.
+
+3. When running the previous command, your nginx instance should be correctly running, so run the following command to reload the nginx configuration for each domain or subdomain you want to secure:
+```bash
+docker exec acme-renewer acme.sh --issue --server https://acme-v02.api.letsencrypt.org/directory --dns dns_duckdns -d your_domain.duckdns.org --home /acme.sh --reloadcmd "/reload_nginx.sh" --force
 ```
 You should see a message like:
 ```
-[Fri May  2 20:41:10 UTC 2025] Your cert is in: /acme.sh/*.p2-tet.duckdns.org_ecc/*.p2-tet.duckdns.org.cer
-[Fri May  2 20:41:10 UTC 2025] Your cert key is in: /acme.sh/*.p2-tet.duckdns.org_ecc/*.p2-tet.duckdns.org.key
-[Fri May  2 20:41:10 UTC 2025] The intermediate CA cert is in: /acme.sh/*.p2-tet.duckdns.org_ecc/ca.cer
-[Fri May  2 20:41:10 UTC 2025] And the full-chain cert is in: /acme.sh/*.p2-tet.duckdns.org_ecc/fullchain.cer
+[Fri May  2 23:11:41 UTC 2025] Your cert is in: /acme.sh/your_domain.duckdns.org_ecc/your_domain.duckdns.org.cer
+[Fri May  2 23:11:41 UTC 2025] Your cert key is in: /acme.sh/your_domain.duckdns.org_ecc/your_domain.duckdns.org.key
+[Fri May  2 23:11:41 UTC 2025] The intermediate CA cert is in: /acme.sh/your_domain.duckdns.org_ecc/ca.cer
+[Fri May  2 23:11:41 UTC 2025] And the full-chain cert is in: /acme.sh/your_domain.duckdns.org_ecc/fullchain.cer
+[Fri May  2 23:11:41 UTC 2025] Running reload cmd: /reload_nginx.sh
+2025/05/02 23:11:41 [notice] 43#43: signal process started
+[Fri May  2 23:11:41 UTC 2025] Reload successful
 ```
-**Note:** You should run this command for each subdomain you want or you can run twice with the `*.your_domain.com` wildcard to secure all subdomains and `your_domain.com` to secure the main domain.
+
+4. Verify SSL renewal:
+```bash
+docker compose exec acme acme.sh --renew -d your_domain.duckdns.org --force
+```
 
 ### Executing Inverse Proxy
 

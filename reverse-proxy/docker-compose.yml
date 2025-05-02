@@ -14,27 +14,16 @@ services:
       - reverse-proxy
 
   acme:
-    image: neilpang/acme.sh:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: acme-renewer
     restart: always
     env_file:
       - .env
     volumes:
       - ./data/acme.sh:/acme.sh
-      - ./reload_nginx.sh:/reload_nginx.sh
-    entrypoint: ["/bin/sh","-c"]
-    command: >
-      # 1) Si es la primera vez, instala acme.sh y su cronjob:
-      if [ ! -f /acme.sh/account.conf ]; then
-        /acme.sh --install \
-          --home /acme.sh \
-          --accountemail "$ACME_EMAIL" \
-          --dns dns_duckdns \
-          --reloadcmd "/reload_nginx.sh" \
-          --install-cronjob \
-          --nocron
-      fi &&
-      /acme.sh --cron --home /acme.sh && sleep infinity
+      - /var/run/docker.sock:/var/run/docker.sock
     networks:
       - reverse-proxy
 
