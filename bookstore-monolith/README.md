@@ -69,10 +69,18 @@ docker compose -f ./docker-compose-dev.yml down
 5. Configure instance details, including network settings and security groups, to allow HTTP (port 80) and HTTPS (port 443) traffic.
 6. Create a new key pair or use an existing one to access the instance.
 7. Launch the instance and wait for it to be in the "running" state.
-8. Go to elastic IPs and allocate a new elastic IP, then associate it with the instance.
+8. Go to elastic IPs and allocate a new elastic IP, then associate it with the instance. (Optional)
+   - Go to the EC2 Dashboard.
+   - Click on "Elastic IPs" in the left sidebar.
+   - Click on "Allocate Elastic IP address."
+   - Choose the instance you launched and associate the elastic IP with it.
 9. SSH into the instance using the key pair:
 ```bash
 ssh -i "your-key.pem" ubuntu@your-elastic-ip
+```
+or
+```bash
+ssh -i "your-key.pem" ubuntu@your-aws-domain
 ```
 
 ### Installing Docker and Docker Compose
@@ -111,22 +119,16 @@ docker compose --version
 ```
 
 ### Domain
-1. Register a domain name with a domain registrar (e.g., GoDaddy, Namecheap). You can also use DuckDNS for free domains.
-2. Set up DNS records to point your domain to the elastic IP of your EC2 instance.
-3. For example, create an A record with the following details:
-   - Name: `@` (or your domain name)
-   - Type: `A`
-   - Value: `your-elastic-ip`
-4. Save the DNS settings and wait for propagation (may take a few minutes).
-5. Verify the domain is pointing to the elastic IP by running:
-```bash
-nslookup your-domain.com
-```
-
+Continue with the SSL certificate, domain and inverse proxy setup at [Reverse Proxy](../reverse-proxy/README.md)
 
 ### Deploying the Application
 1. Clone the repository:
 ```bash
 git clone https://github.com/JuanFelipeRestrepoBuitrago/project-2-tet.git
 cd project-2-tet/bookstore-monolith
+```
+
+2. Run the application:
+```bash
+docker compose up -d
 ```
