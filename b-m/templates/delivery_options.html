@@ -1,23 +1,38 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="container mt-5">
-  <h2 class="mb-4">Seleccionar Proveedor de Entrega</h2>
 
-  <form method="POST" action="{{ url_for('delivery.select_delivery', purchase_id=purchase_id) }}">
-      <div class="mb-3">
-          <select name="provider" class="form-select" required>
-              {% for provider in providers %}
-                  <option value="{{ provider.id }}">
-                      {{ provider.name }} - {{ provider.coverage_area }} - ${{ provider.cost }}
-                  </option>
-              {% endfor %}
-          </select>
+<div class="min-h-[60vh] flex flex-col items-center justify-center px-4">
+  <div class="w-full max-w-md bg-white p-8 rounded-2xl shadow-lg border border-gray-200">
+    <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">
+      Seleccionar Proveedor de Entrega
+    </h2>
+
+    <form method="POST" action="{{ url_for('delivery.select_delivery', purchase_id=purchase_id) }}" class="space-y-5">
+      <div>
+        <label for="provider" class="block text-sm font-medium text-gray-700 mb-1">Proveedor:</label>
+        <select name="provider" id="provider" required
+                class="block w-full rounded-md border-gray-300 shadow-sm focus:ring-black focus:border-black px-4 py-2 bg-gray-50">
+          {% for provider in providers %}
+            <option value="{{ provider.id }}">
+              {{ provider.name }} – {{ provider.coverage_area }} – ${{ provider.cost }}
+            </option>
+          {% endfor %}
+        </select>
       </div>
-      <button type="submit" class="btn btn-primary">Confirmar Entrega</button>
-  </form>
 
-  <div class="mt-3">
-      <a href="{{ url_for('book.catalog') }}" class="btn btn-secondary">Cancelar y Volver al Catálogo</a>
+      <button type="submit"
+              class="w-full bg-black text-white py-2 rounded-md hover:bg-gray-900 transition font-medium">
+        Confirmar Entrega
+      </button>
+    </form>
+
+    <div class="mt-6 text-center">
+      <a href="{{ url_for('book.catalog') }}"
+         class="inline-block text-sm text-gray-600 hover:text-black underline transition">
+        Cancelar y Volver al Catálogo
+      </a>
+    </div>
   </div>
 </div>
+
 {% endblock %}

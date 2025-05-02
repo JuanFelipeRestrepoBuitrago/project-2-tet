@@ -1,16 +1,29 @@
 {% extends 'base.html' %}
 {% block content %}
-<h2>Payment Page</h2>
-<form method="POST">
-  <div class="mb-3">
-    <label>Payment Method:</label>
-    <select name="method" class="form-control" required>
-      <option value="Credit Card">Credit Card</option>
-      <option value="Paypal">Paypal</option>
-      <option value="Bank Transfer">Bank Transfer</option>
-    </select>
+
+<div class="min-h-[60vh] flex flex-col items-center justify-center px-4">
+  <div class="w-full max-w-md bg-white p-8 rounded-2xl shadow-lg border border-gray-200">
+    <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">Método de Pago</h2>
+
+    <form method="POST" class="space-y-5">
+      <div>
+        <label for="method" class="block text-sm font-medium text-gray-700 mb-1">Selecciona un método:</label>
+        <select name="method" id="method" required
+                class="w-full rounded-md border-gray-300 px-4 py-2 bg-gray-50 shadow-sm focus:outline-none focus:ring-black focus:border-black">
+          <option value="Credit Card">Tarjeta de Crédito</option>
+          <option value="Paypal">PayPal</option>
+          <option value="Bank Transfer">Transferencia Bancaria</option>
+        </select>
+      </div>
+
+      <input type="hidden" name="amount" value="100"> <!-- Puedes ajustar el monto real -->
+
+      <button type="submit"
+              class="w-full bg-black text-white py-2 rounded-md hover:bg-gray-900 transition font-medium">
+        Pagar Ahora
+      </button>
+    </form>
   </div>
-  <input type="hidden" name="amount" value="100"> <!-- Puedes ajustar el monto real -->
-  <button type="submit" class="btn btn-primary">Pay Now</button>
-</form>
+</div>
+
 {% endblock %}

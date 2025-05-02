@@ -1,32 +1,33 @@
 {% extends 'base.html' %}
 {% block content %}
-<h2>Catalog of Books</h2>
-<div class="row">
+
+<h2 class="text-3xl font-bold text-center text-gray-900 mb-8">Catálogo de Libros</h2>
+
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
   {% for book in books %}
-  <div class="col-md-4">
-    <div class="card mb-4">
-      <div class="card-body">
-        <h5 class="card-title">{{ book.title }}</h5>
-        <p class="card-text">Author: {{ book.author }}</p>
-        <p>Price: ${{ book.price }}</p>
-        
-          {% if book.stock > 0 %}
-            <p class="card-text"></p>
-              <strong>Unidades disponibles:</strong> {{ book.stock }}
-            </p>
-            <form method="POST" action="{{ url_for('purchase.buy', book_id=book.id) }}">
-              <input type="hidden" name="price" value="{{ book.price }}">
-              <input type="number" name="quantity" class="form-control mb-2" value="1" min="1">
-              <button type="submit" class="btn btn-primary">Buy</button>
-            </form>
-          {% else %}
-          <p class="card-text"></p>
-              <strong class="text-danger">No disponibles</strong>
-          </p>
-          {% endif %}
-      </div>
+  <div class="bg-white shadow-md rounded-xl p-5 border border-gray-200 flex flex-col justify-between">
+    <div>
+      <h3 class="text-xl font-semibold text-gray-900 mb-1">{{ book.title }}</h3>
+      <p class="text-gray-600 text-sm mb-1">Autor: {{ book.author }}</p>
+      <p class="text-gray-700 font-medium mb-2">Precio: ${{ "%.2f"|format(book.price) }}</p>
+      
+      {% if book.stock > 0 %}
+        <p class="text-green-600 font-medium mb-2">Unidades disponibles: {{ book.stock }}</p>
+        <form method="POST" action="{{ url_for('purchase.buy', book_id=book.id) }}" class="space-y-3">
+          <input type="hidden" name="price" value="{{ book.price }}">
+          <input type="number" name="quantity" value="1" min="1"
+                 class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-black focus:border-black bg-gray-50">
+          <button type="submit"
+                  class="w-full bg-black text-white py-2 rounded-md hover:bg-gray-900 transition">
+            Comprar
+          </button>
+        </form>
+      {% else %}
+        <p class="text-red-600 font-semibold">No disponibles</p>
+      {% endif %}
     </div>
   </div>
   {% endfor %}
 </div>
+
 {% endblock %}
