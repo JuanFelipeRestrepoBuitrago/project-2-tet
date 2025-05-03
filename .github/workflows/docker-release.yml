@@ -45,7 +45,7 @@ jobs:
       - name: Build and Push Bookstore-Monolith Image to GHCR 
         uses: docker/build-push-action@v5
         with:
-          context: ./bookstore-monolith-1
+          context: ./bookstore-monolith-2
           platforms: linux/amd64,linux/arm64
           push: true
           provenance: false 
