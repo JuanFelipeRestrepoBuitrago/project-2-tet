@@ -1,11 +1,11 @@
 # Reverse Proxy
 
-Deploy the BookStore Monolithic application on a Virtual Machine on AWS, with its own domain, SSL certificate and reverse proxy on NGINX. Our domain is `p2-tet-bookstore.duckdns.org` and we have the following subdomains:
-- `objective1.p2-tet-bookstore.duckdns.org` for the objective 1 application deploying a monolithic application.
-- `objective2.p2-tet-bookstore.duckdns.org` for the objective 2 application deploying a scaled application with automatic scaling.
-- `objective3.p2-tet-bookstore.duckdns.org` for the objective 3 application deploying a microservices application with automatic scaling.
-- `*.p2-tet-bookstore.duckdns.org` for the objective 3 application deploying a microservices application with automatic scaling.
-- `p2-tet-bookstore.duckdns.org` for the objective 3 application deploying a microservices application with automatic scaling.
+Deploy the BookStore Monolithic application on a Virtual Machine on AWS, with its own domain, SSL certificate and reverse proxy on NGINX. Our domain is `p2tet.duckdns.org` and we have the following subdomains:
+- `objective1.p2tet.duckdns.org` for the objective 1 application deploying a monolithic application.
+- `objective2.p2tet.duckdns.org` for the objective 2 application deploying a scaled application with automatic scaling.
+- `objective3.p2tet.duckdns.org` for the objective 3 application deploying a microservices application with automatic scaling.
+- `*.p2tet.duckdns.org` for the objective 3 application deploying a microservices application with automatic scaling.
+- `p2tet.duckdns.org` for the objective 3 application deploying a microservices application with automatic scaling.
 
 ## Table of Contents
 - [Reverse Proxy](#reverse-proxy)
