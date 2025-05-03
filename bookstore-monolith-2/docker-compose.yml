@@ -16,7 +16,7 @@ services:
       - bookstore_net
 
   flaskapp:
-    image: ghcr.io/juanfeliperestrepobuitrago/project-2-tet/bookstore-monolith:v1.0.0
+    image: ghcr.io/juanfeliperestrepobuitrago/project-2-tet/bookstore-monolith:latest
     container_name: bookstore-monolith
     restart: always
     environment:
