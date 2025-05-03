@@ -33,7 +33,6 @@ jobs:
 
       - name: Build and Push Reverse Proxy Image to GHCR 
         uses: docker/build-push-action@v5
-        working-directory: reverse-proxy
         with:
           context: ./reverse-proxy
           platforms: linux/amd64,linux/arm64
