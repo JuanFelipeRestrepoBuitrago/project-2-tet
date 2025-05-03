@@ -1,20 +1,9 @@
 services:
   flaskapp:
-    image: ghcr.io/juanfeliperestrepobuitrago/project-2-tet/bookstore-monolith:latest
-    container_name: bookstore-monolith
+    image: .
+    container_name: bookstore-monolith-objetive2
     restart: always
     env_file:
       - .env
     ports:
       - "80:5000"
-    depends_on:
-      - db
-    networks:
-      - bookstore_net
-
-volumes:
-  db_data:
-  
-networks:
-  bookstore_net:
-    driver: bridge

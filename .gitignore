@@ -67,3 +67,7 @@ __pycache__/
 
 # VsCode settings
 .vscode/
+
+# Test files
+test.txt
+prueba.py
