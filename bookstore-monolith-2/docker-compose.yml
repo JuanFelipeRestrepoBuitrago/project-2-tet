@@ -1,6 +1,7 @@
 services:
   flaskapp:
-    image: .
+    build: .
+    image: bookstore-monolith-image
     container_name: bookstore-monolith-objetive2
     restart: always
     env_file:
