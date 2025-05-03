@@ -12,6 +12,6 @@ Deploy the BookStore Monolithic application on a Virtual Machine on AWS, with it
 ### Objective Completion Features
 
 - [x] Completed
-- **Domain**: [objective1.p2-tet-bookstore.duckdns.org](https://objective1.p2-tet-bookstore.duckdns.org) is the domain which points to the Monolithic application.
+- **Domain**: [objective1.p2tet.duckdns.org](https://objective1.p2tet.duckdns.org) is the domain which points to the Monolithic application.
 - **SSL Certificate**: The SSL certificate is provided by Let's Encrypt and is automatically renewed every 90 days.
-- **Reverse Proxy**: NGINX is used as a reverse proxy to handle incoming requests and route them to the appropriate application container. In this case, the domain we own is `p2-tet-bookstore.duckdns.org`, but with the reverse proxy, we can access the application using `objective1.p2-tet-bookstore.duckdns.org`. The reverse proxy is configured to handle SSL termination and forward requests to the application running on port 5000. This reverse proxy was set up in a different aws EC2 instance, so I can be able to add the other objectives in the same domain, changing the subdomain for each objective. 
+- **Reverse Proxy**: NGINX is used as a reverse proxy to handle incoming requests and route them to the appropriate application container. In this case, the domain we own is `p2tet.duckdns.org`, but with the reverse proxy, we can access the application using `objective1.p2tet.duckdns.org`. The reverse proxy is configured to handle SSL termination and forward requests to the application running on port 5000. This reverse proxy was set up in a different aws EC2 instance, so I can be able to add the other objectives in the same domain, changing the subdomain for each objective. 
