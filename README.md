@@ -33,6 +33,6 @@ sudo systemctl enable docker
   ```
 
 ### Example
-![Example](/images/proyect.png)
+![image](https://github.com/user-attachments/assets/d01c892f-4cb0-413d-98f8-dca30e7b7fd6)
 
 ## 
