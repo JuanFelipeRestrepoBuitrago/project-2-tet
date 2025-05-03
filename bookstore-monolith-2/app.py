@@ -1,12 +1,11 @@
 from flask import Flask, render_template
 from extensions import db, login_manager
 from models.user import User
-from config.env import SQLALCHEMY_DATABASE_URI, SECRET_KEY, SQLALCHEMY_TRACK_MODIFICATIONS
+from config.env import SECRET_KEY, SQLALCHEMY_TRACK_MODIFICATIONS
 
 # Inicializar la aplicación
 app = Flask(__name__)
 app.config['SECRET_KEY'] = SECRET_KEY
-app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = SQLALCHEMY_TRACK_MODIFICATIONS
 
 # Inicializar extensiones
