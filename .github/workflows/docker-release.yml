@@ -35,7 +35,7 @@ jobs:
         uses: docker/build-push-action@v5
         working-directory: reverse-proxy
         with:
-          context: .
+          context: ./reverse-proxy
           platforms: linux/amd64,linux/arm64
           push: true
           provenance: false 
@@ -45,9 +45,8 @@ jobs:
 
       - name: Build and Push Bookstore-Monolith Image to GHCR 
         uses: docker/build-push-action@v5
-        working-directory: reverse-proxy
         with:
-          context: .
+          context: ./bookstore-monolith
           platforms: linux/amd64,linux/arm64
           push: true
           provenance: false 
