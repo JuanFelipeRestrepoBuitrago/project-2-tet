@@ -1,0 +1,32 @@
+services:
+  nginx:
+    image: nginx:stable-alpine
+    container_name: nginx-proxy
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/ssl:/etc/nginx/ssl
+      - ./data/acme.sh:/etc/letsencrypt/live
+    networks:
+      - reverse-proxy
+
+  acme:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: acme-renewer
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - ./data/acme.sh:/acme.sh
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - reverse-proxy
+
+networks:
+  reverse-proxy:
+    driver: bridge

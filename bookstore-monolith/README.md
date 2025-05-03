@@ -59,3 +59,76 @@ docker compose -f ./docker-compose-dev.yml down
 ```
 
 ## Deployment in AWS
+
+### Launching an EC2 Instance
+
+1. Create an AWS account and log in to the AWS Management Console.
+2. Navigate to the EC2 Dashboard and launch a new instance.
+3. Choose an Ubuntu Server 20.04 LTS AMI.
+4. Select an instance type (e.g., t2.micro for free tier).
+5. Configure instance details, including network settings and security groups, to allow HTTP (port 80) and HTTPS (port 443) traffic.
+6. Create a new key pair or use an existing one to access the instance.
+7. Launch the instance and wait for it to be in the "running" state.
+8. Go to elastic IPs and allocate a new elastic IP, then associate it with the instance. (Optional)
+   - Go to the EC2 Dashboard.
+   - Click on "Elastic IPs" in the left sidebar.
+   - Click on "Allocate Elastic IP address."
+   - Choose the instance you launched and associate the elastic IP with it.
+9. SSH into the instance using the key pair:
+```bash
+ssh -i "your-key.pem" ubuntu@your-elastic-ip
+```
+or
+```bash
+ssh -i "your-key.pem" ubuntu@your-aws-domain
+```
+
+### Installing Docker and Docker Compose
+
+1. Update the package list and install dependencies:
+```bash
+sudo apt update
+sudo apt upgrade -y
+sudo apt install -y apt-transport-https ca-certificates curl software-properties-common
+```
+
+2. Add Docker's official GPG key:
+```bash
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/docker-archive-keyring.gpg
+```
+3. Set up the stable repository:
+```bash
+sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+```
+
+4. Install Docker Engine:
+```bash
+sudo apt update && sudo apt install -y docker-ce docker-ce-cli containerd.io
+```
+5. Start and enable Docker:
+```bash
+sudo usermod -aG docker $USER && logout && sudo systemctl restart docker
+```
+6. Verify Docker installation:
+```bash
+docker --version
+```
+7. Verify Docker Compose installation:
+```bash
+docker compose --version
+```
+
+### Domain
+Continue with the SSL certificate, domain and inverse proxy setup at [Reverse Proxy](../reverse-proxy/README.md)
+
+### Deploying the Application
+1. Clone the repository:
+```bash
+git clone https://github.com/JuanFelipeRestrepoBuitrago/project-2-tet.git
+cd project-2-tet/bookstore-monolith
+```
+
+2. Run the application:
+```bash
+docker compose up -d
+```
