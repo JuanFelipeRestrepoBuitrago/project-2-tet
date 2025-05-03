@@ -1,19 +1,26 @@
 from flask import Flask, render_template
 from extensions import db, login_manager
 from models.user import User
-from config.env import SECRET_KEY, SQLALCHEMY_TRACK_MODIFICATIONS
+from config.env import SQLALCHEMY_DATABASE_URI_WRITE, SECRET_KEY
 
-# Inicializar la aplicación
 app = Flask(__name__)
-app.config['SECRET_KEY'] = SECRET_KEY
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = SQLALCHEMY_TRACK_MODIFICATIONS
 
-# Inicializar extensiones
+# Configuración mínima necesaria
+app.config.update({
+    'SECRET_KEY': SECRET_KEY,
+    'SQLALCHEMY_DATABASE_URI': SQLALCHEMY_DATABASE_URI_WRITE,
+    'SQLALCHEMY_TRACK_MODIFICATIONS': False,
+    'SQLALCHEMY_ENGINE_OPTIONS': {
+        'pool_pre_ping': True,
+        'pool_recycle': 3600
+    }
+})
+
+# Inicialización estándar
 db.init_app(app)
 login_manager.init_app(app)
 login_manager.login_view = 'auth.login'
 
-# Cargar usuario para Flask-Login
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
@@ -41,20 +48,21 @@ def home():
 # Inicializar proveedores de entrega si no existen
 from models.delivery import DeliveryProvider
 
-def initialize_delivery_providers():
-    if DeliveryProvider.query.count() == 0:
+def initialize_data():
+    from models.delivery import DeliveryProvider
+    if not DeliveryProvider.query.first():
         providers = [
             DeliveryProvider(name="DHL", coverage_area="Internacional", cost=50.0),
             DeliveryProvider(name="FedEx", coverage_area="Internacional", cost=45.0),
             DeliveryProvider(name="Envia", coverage_area="Nacional", cost=20.0),
             DeliveryProvider(name="Servientrega", coverage_area="Nacional", cost=15.0),
         ]
-        db.session.bulk_save_objects(providers)
+        db.session.add_all(providers)
         db.session.commit()
 
 # Ejecución principal
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-        initialize_delivery_providers()
+        initialize_data()
     app.run(host="0.0.0.0", debug=True)
