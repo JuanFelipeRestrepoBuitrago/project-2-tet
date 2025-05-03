@@ -14,9 +14,7 @@ services:
       - reverse-proxy
 
   acme:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: ghcr.io/juanfeliperestrepobuitrago/project-2-tet/reverse-proxy-acme:latest
     container_name: acme-renewer
     restart: always
     env_file:

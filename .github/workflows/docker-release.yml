@@ -39,8 +39,8 @@ jobs:
           push: true
           provenance: false 
           tags: |
-            ghcr.io/juanfeliperestrepobuitrago/project-2-tet/reverse-proxy:${{ env.TAG }}
-            ghcr.io/juanfeliperestrepobuitrago/project-2-tet/reverse-proxy:latest
+            ghcr.io/juanfeliperestrepobuitrago/project-2-tet/reverse-proxy-acme:${{ env.TAG }}
+            ghcr.io/juanfeliperestrepobuitrago/project-2-tet/reverse-proxy-acme:latest
 
       - name: Build and Push Bookstore-Monolith Image to GHCR 
         uses: docker/build-push-action@v5

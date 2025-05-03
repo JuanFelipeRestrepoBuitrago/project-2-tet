@@ -3,6 +3,7 @@ version: '3.8'
 services:
   db:
     image: mysql:8
+    container_name: bookstore-db
     restart: always
     environment:
       MYSQL_DATABASE: bookstore
@@ -17,7 +18,8 @@ services:
       - bookstore_net
 
   flaskapp:
-    build: .
+    image: ghcr.io/juanfeliperestrepobuitrago/project-2-tet/bookstore-monolith:latest
+    container_name: bookstore-monolith
     restart: always
     environment:
       - FLASK_ENV=development
