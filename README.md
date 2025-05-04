@@ -52,3 +52,4 @@ Cloud deployment of the monolithic application using **EC2 autoscaling**, **load
   - Minimum: 1 instance.
   - Maximum: 6 instances.
   - Desired capacity: 2 instances (scales based on demand).
+- 🌐 **Domain**: [objective2.p2tet.duckdns.org](https://objective2.p2tet.duckdns.org) points to the Monolithic application with autoscaling.

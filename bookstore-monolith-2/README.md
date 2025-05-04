@@ -8,6 +8,7 @@ Cloud scaling of a monolithic application, scaled on EC2 virtual machines on dem
 - **Highly available database**: We used the Aurora and RDS service to deploy a highly available database in the cloud which integrates with our application, which will later allow for auto-scaling.
 - **Load balancer**: a load balancer was implemented that will redirect traffic between multiple service instances, which is the central axis in our scaling strategy, since each instance works with a remote database, so there is no dependency between application instances, something that could not be achieved following the monolithic architecture approach in objective 1.
 - **AWS Autoscaling**: An auto-scaling policy was implemented based on an image created from an EC2 instance, which defines that there can be between 1 to 6 application instances maximum, with a desired number of 2, which will increase on demand.
+- **Domain**: [objective2.p2tet.duckdns.org](https://objective2.p2tet.duckdns.org) is the domain which points to the Monolithic application with autoscaling.
 
 ## Table of Contents
 - [Objective 2](#objective-2)
