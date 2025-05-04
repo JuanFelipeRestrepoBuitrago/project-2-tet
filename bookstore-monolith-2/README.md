@@ -1,142 +1,158 @@
-# Objective 1
-Deploy the BookStore Monolithic application on a Virtual Machine on AWS, with its own domain, SSL certificate and reverse proxy on NGINX. 
+# Objective 2
+Cloud scaling of a monolithic application, scaled on EC2 virtual machines on demand, with a highly available database.
 
 ## Objective Completion Features
 
 - [x] Completed
-- **Domain**: [objective1.p2-tet-bookstore.duckdns.org](https://objective1.p2-tet-bookstore.duckdns.org) is the domain which points to the Monolithic application.
-- **SSL Certificate**: The SSL certificate is provided by Let's Encrypt and is automatically renewed every 90 days.
-- **Reverse Proxy**: NGINX is used as a reverse proxy to handle incoming requests and route them to the appropriate application container. In this case, the domain we own is `p2-tet-bookstore.duckdns.org`, but with the reverse proxy, we can access the application using `objective1.p2-tet-bookstore.duckdns.org`. The reverse proxy is configured to handle SSL termination and forward requests to the application running on port 5000. This reverse proxy was set up in a different aws EC2 instance, so I can be able to add the other objectives in the same domain, changing the subdomain for each objective. 
+- **Extension of objective 1**: This new objective continues with what was implemented in objective 1, separating the different functionalities under subdomains of the application.
+- **Highly available database**: We used the Aurora and RDS service to deploy a highly available database in the cloud which integrates with our application, which will later allow for auto-scaling.
+- **Load balancer**: a load balancer was implemented that will redirect traffic between multiple service instances, which is the central axis in our scaling strategy, since each instance works with a remote database, so there is no dependency between application instances, something that could not be achieved following the monolithic architecture approach in objective 1.
+- **AWS Autoscaling**: An auto-scaling policy was implemented based on an image created from an EC2 instance, which defines that there can be between 1 to 6 application instances maximum, with a desired number of 2, which will increase on demand.
 
 ## Table of Contents
-- [Objective 1](#objective-1)
+- [Objective 2](#objective-2)
 - [Objective Completion Features](#objective-completion-features)
 - [Bookstore Monolith](#bookstore-monolith)
 - [Table of Contents](#table-of-contents)
-- [Setup](#setup)
+- [Deploy](#setup)
   - [Prerequisites](#prerequisites)
-  - [Execution](#execution)
-- [Deployment in AWS](#deployment-in-aws)
-
+  - [Strategy](#strategy)
+  - [Code changes](#code-changes)
+  - [Database configuration](#database-configuration)
+  - [Load Balancer configuration](#load-balancer-configuration)
+  - [Autoescaling configuration](#autoscaling-configuration)
 
 # Bookstore Monolith
-A simple bookstore application that allows users to view, add, update, and delete books. The application is built using Flask and uses a MySQL database to store book information. 
+A simple bookstore application that allows users to view, add, update, and delete books. The application is built using Flask and uses a MySQL database to store book information, modified for the use of an external database.
 
 ## Setup
 
 ### Prerequisites
 - Python 3.x (3.12.4 was the used version)
-- MySQL 8.x or Docker
+- Docker and Docker Compose
 
-### Execution
+### Strategy
+Our strategy to scale the monolithic application with auto-scaling was fundamentally divided into 3 steps:
+1. Modify the code to use an external database, to decouple the dependency on another container running on the same machine.
+2. Create a load balancer that distributes requests among multiple machines.
+3. Assign an auto-scaling policy that, together with the load balancer, can adapt to different request flows.
 
-1. Clone the repository:
-```bash
-git clone https://github.com/JuanFelipeRestrepoBuitrago/project-2-tet.git
-cd project-2-tet/bookstore-monolith
-```
+### Code changes
+The initial **Bookstore** application was a monolith that was deployed in two docker containers, one with the application and another with the database. This approach limited its scalability in that it depended on a database docker container on the same network. The first step in our scaling strategy was to decouple this relationship between the application and the database, using one in AWS, which guarantees us high availability and fault tolerance, thus fulfilling one of the requirements of this objective (more on the database will be discussed in its respective section).
 
-2. Create a virtual environment (optional):
-```bash
-python3 -m venv venv
-source venv/bin/activate
-```
-3. Install the required packages:
-```bash
-pip install -r requirements.txt
-```
-4. Execute the database or docker compose with the following specifications:
-```bash
-MYSQL_DATABASE: bookstore
-MYSQL_USER: bookstore_user
-MYSQL_PASSWORD: bookstore_pass
-MYSQL_ROOT_PASSWORD: root_pass
-```
-or docker compose with the following specifications:
-```bash
-docker compose -f ./docker-compose-dev.yml up -d
-```
-5. Run the application:
-```bash
-python app.py
-```
-6. Access the application at `http://localhost:5000`.
-7. To stop the application, press `Ctrl+C` in the terminal where the application is running and to stop the docker compose, run:
-```bash
-docker compose -f ./docker-compose-dev.yml down
-```
+The main changes in the code were:
+1. Introduction of the setup_db file, which serves the function of creating the database if it is not already created.
+2. Introduction of the **_bindings_** file whose main responsibility is to handle routing between reading and writing databases, since the selected database implements two different endpoints, one for reading and another for writing data.
+3. Introduction of the **_config.py_** file that serves to select between using production and development database, to facilitate the development stage.
+4. There were major changes to the **_extensions.py_** file, as it now initializes the application to use the routing functionality between database endpoints.
+5. There were major changes to the **_app.py_** file, refactoring code to make it much simpler to use with the new functionality.
 
-## Deployment in AWS
+The following code snippets allow us to appreciate the core of the change made to support the new database:
+```python
+class RoutingSQLAlchemy(SQLAlchemy):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.write_engine_url = None
+        self.read_engine_url = None
 
-### Launching an EC2 Instance
+    def init_app(self, app):
+        """Initializes the application with DB routing support"""
+        super().init_app(app)
+        
+        self.write_engine_url = app.config['SQLALCHEMY_DATABASE_URI_WRITE']
+        self.read_engine_url = app.config['SQLALCHEMY_DATABASE_URI_READ']
+        
+        if not self.read_engine_url:
+            self.read_engine_url = self.write_engine_url
+            
+        session = create_routing_session(self.write_engine_url, self.read_engine_url)
+        
+        self.session = session
+```
+```python
+class RoutingSession(scoped_session):
+    def __init__(self, write_session_factory, read_session_factory):
+        """
+        Initializes the routing session with factories for writing and reading
+        """
+        self.write_session_factory = write_session_factory
+        self.read_session_factory = read_session_factory
+        super().__init__(write_session_factory)
 
-1. Create an AWS account and log in to the AWS Management Console.
-2. Navigate to the EC2 Dashboard and launch a new instance.
-3. Choose an Ubuntu Server 20.04 LTS AMI.
-4. Select an instance type (e.g., t2.micro for free tier).
-5. Configure instance details, including network settings and security groups, to allow HTTP (port 80) and HTTPS (port 443) traffic.
-6. Create a new key pair or use an existing one to access the instance.
-7. Launch the instance and wait for it to be in the "running" state.
-8. Go to elastic IPs and allocate a new elastic IP, then associate it with the instance. (Optional)
-   - Go to the EC2 Dashboard.
-   - Click on "Elastic IPs" in the left sidebar.
-   - Click on "Allocate Elastic IP address."
-   - Choose the instance you launched and associate the elastic IP with it.
-9. SSH into the instance using the key pair:
-```bash
-ssh -i "your-key.pem" ubuntu@your-elastic-ip
-```
-or
-```bash
-ssh -i "your-key.pem" ubuntu@your-aws-domain
-```
+    def get_bind(self, mapper=None, clause=None):
+        """
+        Determines which database to use based on the type of operation
+        """
+        if self._flushing or self.info.get('writing'):
+            return self.write_session_factory.kw['bind']
+        else:
+            return self.read_session_factory.kw['bind']
 
-### Installing Docker and Docker Compose
+    def using_write_bind(self):
+        """
+        Marks the session to use the write endpoint
+        """
+        self.info['writing'] = True
+        return self
+    
+    def remove(self):
+        """
+        Cleans up session references
+        """
+        self.info.pop('writing', None)
+        super().remove()
 
-1. Update the package list and install dependencies:
-```bash
-sudo apt update
-sudo apt upgrade -y
-sudo apt install -y apt-transport-https ca-certificates curl software-properties-common
-```
-
-2. Add Docker's official GPG key:
-```bash
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/docker-archive-keyring.gpg
-```
-3. Set up the stable repository:
-```bash
-sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-```
-
-4. Install Docker Engine:
-```bash
-sudo apt update && sudo apt install -y docker-ce docker-ce-cli containerd.io
-```
-5. Start and enable Docker:
-```bash
-sudo usermod -aG docker $USER && logout && sudo systemctl restart docker
-```
-6. Verify Docker installation:
-```bash
-docker --version
-```
-7. Verify Docker Compose installation:
-```bash
-docker compose --version
+def create_routing_session(write_engine_url, read_engine_url):
+    """
+    Creates a session that handles routing between read and write databases
+    """
+    write_engine = create_engine(write_engine_url, pool_recycle=3600)
+    read_engine = create_engine(read_engine_url, pool_recycle=3600)
+    
+    write_session_factory = sessionmaker(bind=write_engine)
+    read_session_factory = sessionmaker(bind=read_engine)
+    
+    return RoutingSession(write_session_factory, read_session_factory)
 ```
 
-### Domain
-Continue with the SSL certificate, domain and inverse proxy setup at [Reverse Proxy](../reverse-proxy/README.md)
+## Database configuration
+The characteristics provided by the database we created in AWS are:
 
-### Deploying the Application
-1. Clone the repository:
-```bash
-git clone https://github.com/JuanFelipeRestrepoBuitrago/project-2-tet.git
-cd project-2-tet/bookstore-monolith
-```
+**Architecture**
 
-2. Run the application:
-```bash
-docker compose up -d
-```
+1. **Deployment topology**:
+   * **3 instances** distributed across **3 different availability zones (AZs)** within an AWS region.
+   * **Components**:
+      * **AZ 1**:
+         * **Primary instance**:
+            * Responsible for **read/write operations**.
+            * **SSD** storage (probably Amazon EBS optimized for high performance).
+      * **AZ 2 and AZ 3**:
+         * **Readable standby instances**:
+            * Synchronized replicas of the primary instance.
+            * **Read-only** (can handle read queries to offload the primary).
+            * **SSD** storage.
+
+2. **Endpoints**:
+   * **Write Endpoint**:
+      * Points to the primary instance in **AZ 1**.
+      * Used for write operations (INSERT, UPDATE, DELETE).
+   * **Reader Endpoint**:
+      * Automatically balances read queries between standby instances in **AZ 2 and AZ 3**.
+      * Ideal for analytical workloads or reports.
+
+**Key Features**
+
+| **Attribute** | **Detail** |
+|--------------|-------------|
+| **Availability** | **99.95% uptime** (AWS SLA for Multi-AZ). |
+| **Redundancy** | Tolerance to complete AZ failure (if AZ 1 fails, a standby is promoted). |
+| **Durability** | Data replicated **synchronously** to the primary and **asynchronously** to the standbys. |
+| **Read Scalability** | Up to **2 readable instances** to distribute read loads. |
+| **Write Latency** | Reduced thanks to SSD use and optimized replication. |
+
+## Load Balancer configuration
+A load balancer was created together with a target group to which all new instances of the application that are deployed will belong, this way it can distribute the workload among all of them.
+
+## Autoscaling configuration
+An auto-scaling policy was configured that creates new instances of the application to the target group, specifically a policy in which when 50 percent of CPU resources are consistently used for 300 seconds, a new instance of the application is created.
