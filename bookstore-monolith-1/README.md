@@ -133,7 +133,7 @@ Continue with the SSL certificate, domain and inverse proxy setup at [Reverse Pr
 1. Clone the repository:
 ```bash
 git clone https://github.com/JuanFelipeRestrepoBuitrago/project-2-tet.git
-cd project-2-tet/bookstore-monolith
+cd project-2-tet/bookstore-monolith-1
 ```
 
 2. Run the application:
