@@ -64,12 +64,7 @@ __pycache__/
 .env
 .env.production
 .env.local
-.env.development
-.env.dev
 
-# VsCode settings
-.vscode/
-
-# Test files
-test.txt
-prueba.py
+# SQL database files
+*.db
+*.sqlite

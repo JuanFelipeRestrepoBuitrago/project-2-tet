@@ -1,5 +1,8 @@
-# Objective 2
-Cloud scaling of a monolithic application, scaled on EC2 virtual machines on demand, with a highly available database.
+# Objective 3
+Re-engineer the BookStore Monolitica app, to be divided into 3 coordinating microservices:
+- Microservice 1: Authentication: will manage register, login, logout.
+- Microservice 2: Catalog: will allow to visualize the offer of books on the platform.
+- Microservice 3: Purchase, Payment and Delivery of books sold on the platform.
 
 ## Objective Completion Features
 
@@ -8,7 +11,7 @@ Cloud scaling of a monolithic application, scaled on EC2 virtual machines on dem
 - **Highly available database**: We used the Aurora and RDS service to deploy a highly available database in the cloud which integrates with our application, which will later allow for auto-scaling.
 - **Load balancer**: a load balancer was implemented that will redirect traffic between multiple service instances, which is the central axis in our scaling strategy, since each instance works with a remote database, so there is no dependency between application instances, something that could not be achieved following the monolithic architecture approach in objective 1.
 - **AWS Autoscaling**: An auto-scaling policy was implemented based on an image created from an EC2 instance, which defines that there can be between 1 to 6 application instances maximum, with a desired number of 2, which will increase on demand.
-- **Domain**: [objective2.p2tet.duckdns.org](https://objective2.p2tet.duckdns.org) is the domain which points to the Monolithic application with autoscaling.
+- **Domain**: [objective3.p2tet.duckdns.org](https://objective2.p2tet.duckdns.org) is the domain which points to the Monolithic application with autoscaling.
 
 ## Table of Contents
 - [Objective 2](#objective-2)
@@ -31,8 +34,8 @@ Cloud scaling of a monolithic application, scaled on EC2 virtual machines on dem
   - [Create Auto Scaling Group](#create-auto-scaling-group)
 
 
-# Bookstore Monolith
-A simple bookstore application that allows users to view, add, update, and delete books. The application is built using Flask and uses a MySQL database to store book information, modified for the use of an external database.
+# Authentication Microservice
+The authentication microservice is responsible for managing user authentication and authorization. It provides endpoints for user registration, login, and logout. The microservice uses JWT (JSON Web Tokens) for secure token-based authentication.
 
 ## Domain
 
@@ -41,11 +44,7 @@ A simple bookstore application that allows users to view, add, update, and delet
 - Docker and Docker Compose
 
 ### Strategy
-Our strategy to scale the monolithic application with auto-scaling was fundamentally divided into 3 steps:
-1. Modify the code to use an external database, to decouple the dependency on another container running on the same machine.
-2. Create a load balancer that distributes requests among multiple machines.
-3. Assign an auto-scaling policy that, together with the load balancer, can adapt to different request flows.
-
+The authentication microservice is designed to be stateless, meaning it does not store any session information on the server. Instead, it relies on JWT tokens to authenticate users. When a user logs in, the microservice generates a JWT token that contains the user's information and expiration time. This token is then sent back to the client and must be included in subsequent requests to access protected resources.
 ### Code changes
 The initial **Bookstore** application was a monolith that was deployed in two docker containers, one with the application and another with the database. This approach limited its scalability in that it depended on a database docker container on the same network. The first step in our scaling strategy was to decouple this relationship between the application and the database, using one in AWS, which guarantees us high availability and fault tolerance, thus fulfilling one of the requirements of this objective (more on the database will be discussed in its respective section).
 
