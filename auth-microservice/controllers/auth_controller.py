@@ -17,7 +17,7 @@ def generate_jwt(user_id, email, name):
         'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=24),  # Token expires in 24 hours
         'iat': datetime.datetime.utcnow()
     }
-    return jwt.encode(payload, current_app.config['JWT_SECRET'], algorithm='HS256')
+    return jwt.encode(payload, current_app.config['JWT_SECRET_KEY'], algorithm='HS256')
 
 @auth.route('/login', methods=['POST'])
 def login():
@@ -82,8 +82,19 @@ def logout():
     """
     Log out the current user.
     """
-    try: 
+    try:
+        token = request.headers.get('Authorization')
+        if not token:
+            return jsonify({'error': 'No token provided'}), 401
+        if token.startswith('Bearer '):
+            token = token.split(' ')[1]
+
+        jwt.decode(token, current_app.config['JWT_SECRET_KEY'], algorithms=['HS256'])
         return jsonify({'message': 'Logout successful, please clear the token'}), 200
+    except jwt.ExpiredSignatureError:
+        return jsonify({'message': 'Token already expired, please clear it'}), 200
+    except jwt.InvalidTokenError:
+        return jsonify({'error': 'Invalid token'}), 401
     except Exception as e:
         return jsonify({'error': 'Logout failed', 'details': str(e)}), 500
     
@@ -93,15 +104,15 @@ def check_login():
     """
     Check if a user is logged in and return user details if authenticated.
     """
-    token = request.headers.get('Authorization')
-    if not token:
-        return jsonify({'is_authenticated': False, 'message': 'No token provided'}), 401
-    
-    if token.startswith('Bearer '):
-        token = token.split(' ')[1]
-        
     try:
-        payload = jwt.decode(token, current_app.config['JWT_SECRET'], algorithms=['HS256'])
+        token = request.headers.get('Authorization')
+        if not token:
+            return jsonify({'is_authenticated': False, 'message': 'No token provided'}), 401
+        
+        if token.startswith('Bearer '):
+            token = token.split(' ')[1]
+        
+        payload = jwt.decode(token, current_app.config['JWT_SECRET_KEY'], algorithms=['HS256'])
         return jsonify({
             'is_authenticated': True,
             'user': {
