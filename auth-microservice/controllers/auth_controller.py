@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask import Blueprint, request, jsonify
 from flask_login import login_user, login_required, logout_user
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -7,52 +7,54 @@ from extensions import db
 
 auth = Blueprint('auth', __name__)
 
-@auth.route('/login', methods=['GET', 'POST'])
+@auth.route('/login', methods=['POST'])
 def login():
     """
-    Handle login logic: validate user credentials and redirect on success.
+    Handle login logic: validate user credentials and returns message.
     """
-    if request.method == 'POST':
-        email = request.form.get('email')
-        password = request.form.get('password')
+    data = request.get_json()
+    email = data.get('email')
+    password = data.get('password')
+    
+    if not email or not password:
+        return jsonify({'error': 'Missing required fields'}), 400
+    
+    user = User.query.filter_by(email=email).first()
+    
+    if user and check_password_hash(user.password, password):
+        login_user(user)
+        return jsonify({'message': 'Login successful', 'user': {'id': user.id, 'name': user.name, 'email': user.email}}), 200
+    else:
+        return jsonify({'error': 'Invalid credentials'}), 401
+    
 
-        user = User.query.filter_by(email=email).first()
 
-        if user and check_password_hash(user.password, password):
-            login_user(user)
-            return redirect(url_for('book.catalog'))
-
-        flash('Login failed. Please check your credentials.', 'error')
-
-    return render_template('login.html')
-
-
-@auth.route('/register', methods=['GET', 'POST'])
+@auth.route('/register', methods=['POST'])
 def register():
     """
     Handle user registration: create new user with hashed password.
     """
-    if request.method == 'POST':
-        name = request.form.get('name')
-        email = request.form.get('email')
-        password = request.form.get('password')
+    data = request.get_json()
+    email = data.get('email')
+    name = data.get('name')
+    password = data.get('password')
+    
+    if not email or not name or not password:
+        return jsonify({'error': 'Missing required fields'}), 400
+    if User.query.filter_by(email=email).first():
+        return jsonify({'error': 'Email already exists'}), 400
+    hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
+    new_user = User(name=name, email=email, password=hashed_password)
+    db.session.add(new_user)
+    db.session.commit()
+    return {'message': 'User registered successfully', 'user_id': new_user.id}, 201
 
-        hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
-        new_user = User(name=name, email=email, password=hashed_password)
 
-        db.session.add(new_user)
-        db.session.commit()
-
-        return redirect(url_for('auth.login'))
-
-    return render_template('register.html')
-
-
-@auth.route('/logout')
+@auth.route('/logout', methods=['POST'])
 @login_required
 def logout():
     """
     Log out the current user and redirect to the login page.
     """
     logout_user()
-    return redirect(url_for('auth.login'))
+    return jsonify({'message': 'Logout successful'}), 200

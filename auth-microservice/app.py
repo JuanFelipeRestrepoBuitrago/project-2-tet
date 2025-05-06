@@ -1,6 +1,7 @@
 import os
 from flask import Flask, render_template
 from extensions import db, login_manager
+from controllers.auth_controller import auth
 from models.user import User
 from config import config
 
@@ -20,15 +21,7 @@ def create_app(config_name=None):
     def load_user(user_id):
         return User.query.get(int(user_id))
     
-    # Registrar Blueprints
-    from controllers.auth_controller import auth
-    
     app.register_blueprint(auth)
-    
-    # Ruta principal
-    @app.route('/')
-    def home():
-        return render_template('home.html')
     
     return app
 
