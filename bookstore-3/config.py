@@ -7,6 +7,7 @@ class Config:
     
     SQLALCHEMY_DATABASE_URI_WRITE = os.getenv('WRITE_ENGINE')
     SQLALCHEMY_DATABASE_URI_READ = os.getenv('READER_ENGINE')
+    AUTH_SERVICE_URL = os.getenv('AUTH_SERVICE_URL')
     
     if not SQLALCHEMY_DATABASE_URI_READ:
         SQLALCHEMY_DATABASE_URI_READ = SQLALCHEMY_DATABASE_URI_WRITE
@@ -29,6 +30,7 @@ class ProductionConfig(Config):
     @classmethod
     def init_app(cls, app):
         assert cls.SQLALCHEMY_DATABASE_URI_WRITE, "No se ha definido WRITE_ENGINE"
+        assert cls.AUTH_SERVICE_URL, "No se ha definido AUTH_SERVICE_URL"
         
         if not cls.SQLALCHEMY_DATABASE_URI_READ:
             app.logger.warning("No se ha definido READER_ENGINE, usando WRITE_ENGINE para ambos")

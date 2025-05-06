@@ -1,23 +1,21 @@
-# Objective 2
-Cloud scaling of a monolithic application, scaled on EC2 virtual machines on demand, with a highly available database.
+# Objective 3
+Re-engineer the BookStore Monolitica app, to be divided into 3 coordinating microservices:
+- Microservice 1: Authentication: will manage register, login, logout.
+- Microservice 2: Catalog: will allow to visualize the offer of books on the platform.
+- Microservice 3: Purchase, Payment and Delivery of books sold on the platform.
 
 ## Objective Completion Features
 
 - [x] Completed
-- **Extension of objective 1**: This new objective continues with what was implemented in objective 1, separating the different functionalities under subdomains of the application.
-- **Highly available database**: We used the Aurora and RDS service to deploy a highly available database in the cloud which integrates with our application, which will later allow for auto-scaling.
-- **Load balancer**: a load balancer was implemented that will redirect traffic between multiple service instances, which is the central axis in our scaling strategy, since each instance works with a remote database, so there is no dependency between application instances, something that could not be achieved following the monolithic architecture approach in objective 1.
-- **AWS Autoscaling**: An auto-scaling policy was implemented based on an image created from an EC2 instance, which defines that there can be between 1 to 6 application instances maximum, with a desired number of 2, which will increase on demand.
-- **Domain**: [objective2.p2tet.duckdns.org](https://objective2.p2tet.duckdns.org) is the domain which points to the Monolithic application with autoscaling.
+- **Domain**: [objective3.p2tet.duckdns.org](https://objective2.p2tet.duckdns.org) is the domain which points to the Monolithic application with autoscaling.
 
 ## Table of Contents
-- [Objective 2](#objective-2)
+- [Objective 3](#objective-3)
 - [Objective Completion Features](#objective-completion-features)
-- [Bookstore Monolith](#bookstore-monolith)
+- [Bookstore 3 with Microservices](#bookstore-3-with-microservices)
 - [Table of Contents](#table-of-contents)
 - [Domain](#domain)
     - [Prerequisites](#prerequisites)
-    - [Code changes](#code-changes)
 - [Database configuration](#database-configuration)
 - [Load Balancer configuration](#load-balancer-configuration)
 - [Autoscaling configuration](#autoscaling-configuration)
@@ -26,13 +24,10 @@ Cloud scaling of a monolithic application, scaled on EC2 virtual machines on dem
   - [Installing Docker and Docker Compose](#installing-docker-and-docker-compose)
   - [Domain](#domain-1)
   - [Deploying the Application](#deploying-the-application)
-  - [Create ALB Load Balancer in EC2](#create-alb-load-balancer-in-ec2)
-  - [Create AMI from the template instance](#create-ami-from-the-template-instance)
-  - [Create Auto Scaling Group](#create-auto-scaling-group)
 
 
-# Bookstore Monolith
-A simple bookstore application that allows users to view, add, update, and delete books. The application is built using Flask and uses a MySQL database to store book information, modified for the use of an external database.
+# Bookstore 3 with Microservices
+The authentication microservice is responsible for managing user authentication and authorization. It provides endpoints for user registration, login, and logout. The microservice uses JWT (JSON Web Tokens) for secure token-based authentication.
 
 ## Domain
 
@@ -41,88 +36,10 @@ A simple bookstore application that allows users to view, add, update, and delet
 - Docker and Docker Compose
 
 ### Strategy
-Our strategy to scale the monolithic application with auto-scaling was fundamentally divided into 3 steps:
-1. Modify the code to use an external database, to decouple the dependency on another container running on the same machine.
-2. Create a load balancer that distributes requests among multiple machines.
-3. Assign an auto-scaling policy that, together with the load balancer, can adapt to different request flows.
-
-### Code changes
-The initial **Bookstore** application was a monolith that was deployed in two docker containers, one with the application and another with the database. This approach limited its scalability in that it depended on a database docker container on the same network. The first step in our scaling strategy was to decouple this relationship between the application and the database, using one in AWS, which guarantees us high availability and fault tolerance, thus fulfilling one of the requirements of this objective (more on the database will be discussed in its respective section).
-
-The main changes in the code were:
-1. Introduction of the setup_db file, which serves the function of creating the database if it is not already created.
-2. Introduction of the **_bindings_** file whose main responsibility is to handle routing between reading and writing databases, since the selected database implements two different endpoints, one for reading and another for writing data.
-3. Introduction of the **_config.py_** file that serves to select between using production and development database, to facilitate the development stage.
-4. There were major changes to the **_extensions.py_** file, as it now initializes the application to use the routing functionality between database endpoints.
-5. There were major changes to the **_app.py_** file, refactoring code to make it much simpler to use with the new functionality.
-
-The following code snippets allow us to appreciate the core of the change made to support the new database:
-```python
-class RoutingSQLAlchemy(SQLAlchemy):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.write_engine_url = None
-        self.read_engine_url = None
-
-    def init_app(self, app):
-        """Initializes the application with DB routing support"""
-        super().init_app(app)
-        
-        self.write_engine_url = app.config['SQLALCHEMY_DATABASE_URI_WRITE']
-        self.read_engine_url = app.config['SQLALCHEMY_DATABASE_URI_READ']
-        
-        if not self.read_engine_url:
-            self.read_engine_url = self.write_engine_url
-            
-        session = create_routing_session(self.write_engine_url, self.read_engine_url)
-        
-        self.session = session
-```
-```python
-class RoutingSession(scoped_session):
-    def __init__(self, write_session_factory, read_session_factory):
-        """
-        Initializes the routing session with factories for writing and reading
-        """
-        self.write_session_factory = write_session_factory
-        self.read_session_factory = read_session_factory
-        super().__init__(write_session_factory)
-
-    def get_bind(self, mapper=None, clause=None):
-        """
-        Determines which database to use based on the type of operation
-        """
-        if self._flushing or self.info.get('writing'):
-            return self.write_session_factory.kw['bind']
-        else:
-            return self.read_session_factory.kw['bind']
-
-    def using_write_bind(self):
-        """
-        Marks the session to use the write endpoint
-        """
-        self.info['writing'] = True
-        return self
-    
-    def remove(self):
-        """
-        Cleans up session references
-        """
-        self.info.pop('writing', None)
-        super().remove()
-
-def create_routing_session(write_engine_url, read_engine_url):
-    """
-    Creates a session that handles routing between read and write databases
-    """
-    write_engine = create_engine(write_engine_url, pool_recycle=3600)
-    read_engine = create_engine(read_engine_url, pool_recycle=3600)
-    
-    write_session_factory = sessionmaker(bind=write_engine)
-    read_session_factory = sessionmaker(bind=read_engine)
-    
-    return RoutingSession(write_session_factory, read_session_factory)
-```
+The main application is designed to be connected to 3 different microservices, which are:
+- **Authentication**: This microservice is responsible for managing user authentication and authorization. It provides endpoints for user registration, login, and logout. The microservice uses JWT (JSON Web Tokens) for secure token-based authentication.
+- **Catalog**: This microservice is responsible for managing the catalog of books available on the platform. It provides endpoints for retrieving book information, searching for books, and managing book inventory.
+- **Purchase**: This microservice is responsible for managing the purchase process, including payment processing and order management. It provides endpoints for creating orders, processing payments, and managing order status.
 
 ## Database configuration
 The characteristics provided by the database we created in AWS are:
@@ -165,6 +82,58 @@ A load balancer was created together with a target group to which all new instan
 
 ## Autoscaling configuration
 An auto-scaling policy was configured that creates new instances of the application to the target group, specifically a policy in which when 50 percent of CPU resources are consistently used for 300 seconds, a new instance of the application is created.
+
+## Set up Development
+
+### Execution
+
+You must have run the microservices in the following order:
+1. **Authentication**: Follow the instructions in the [auth-microservice](../auth-microservice/README.md) directory.
+2. **Catalog**: Follow the instructions in the [catalog-microservice](../catalog-microservice/README.md) directory.
+3. **Purchase**: Follow the instructions in the [purchase-microservice](../purchase-microservice/README.md) directory.
+
+1. Clone the repository:
+```bash
+git clone https://github.com/JuanFelipeRestrepoBuitrago/project-2-tet.git
+cd project-2-tet/bookstore-3
+```
+
+2. Create a virtual environment (optional):
+```bash
+python3 -m venv venv
+source venv/bin/activate
+```
+3. Install the required packages:
+```bash
+pip install -r requirements.txt
+```
+4. Set up the environment variables as in the `.env.example` file:
+In windows run:
+```bash
+set FLASK_ENV=development
+set SECRET_KEY=secretkey
+set SQLALCHEMY_TRACK_MODIFICATIONS=False
+set WRITE_ENGINE=mysql+pymysql://bookstore_user:123@localhost/bookstore
+set READER_ENGINE=mysql+pymysql://bookstore_user:123@localhost/bookstore
+set CREATION_DB=mysql+pymysql://bookstore_user:123@localhost/bookstore
+set AUTH_SERVICE_URL=http://YOUR_URL:YOUR_PORT/auth
+```
+or in Linux run:
+```bash
+export FLASK_ENV=development
+export SECRET_KEY=secretkey
+export SQLALCHEMY_TRACK_MODIFICATIONS=False
+export WRITE_ENGINE=mysql+pymysql://bookstore_user:123@localhost/bookstore
+export READER_ENGINE=mysql+pymysql://bookstore_user:123@localhost/bookstore
+export CREATION_DB=mysql+pymysql://bookstore_user:123@localhost/bookstore
+export AUTH_SERVICE_URL=http://YOUR_URL:YOUR_PORT/auth
+```
+5. Run the application:
+```bash
+python app.py
+```
+6. Access the application at `http://localhost:5000`.
+7. You can stop the application by pressing `Ctrl+C` in the terminal.
 
 ## Set up Deployment
 
@@ -223,60 +192,20 @@ Continue with the SSL certificate, domain and inverse proxy setup at [Reverse Pr
 1. Clone the repository:
 ```bash
 git clone https://github.com/JuanFelipeRestrepoBuitrago/project-2-tet.git
-cd project-2-tet/bookstore-monolith-2
+cd project-2-tet/bookstore-3
+```
+2. Create a `.env` file in the root directory of the project and set the environment variables as in the `.env.example` file:
+```bash
+FLASK_ENV=production
+SECRET_KEY=secretkey
+SQLALCHEMY_TRACK_MODIFICATIONS=False
+WRITE_ENGINE=mysql+pymysql://YOUR_USER:YOUR_PASS@YOUR_URL/YOUR_DB
+READER_ENGINE=mysql+pymysql://YOUR_USER:YOUR_PASS@YOUR_URL/YOUR_DB
+CREATION_DB=mysql+pymysql://YOUR_USER:YOUR_PASS@YOUR_URL/YOUR_DB
+AUTH_SERVICE_URL=http://YOUR_URL:YOUR_PORT/auth
 ```
 
-2. Run the application:
+3. Run the application:
 ```bash
 docker compose up -d
 ```
-
-### Create ALB Load Balancer in EC2
-
-1. Go to the EC2 Dashboard.
-2. Click on "Load Balancers" in the left sidebar.
-3. Click on "Create Load Balancer."
-4. Choose "Application Load Balancer" with the ALB option.
-5. Configure the load balancer:
-   - Name: `your_name`
-   - Scheme: `internet-facing`
-   - IP address type: `ipv4`
-   - Listeners: HTTP (port 80) and HTTPS (port 443)
-   - Availability Zones: Select the VPC and subnets where your instances are going to be launched. You don't need to select the zone where the template is launched, since the load balancer will be responsible for distributing the traffic.
-   - Security groups: Create a new security group or select an existing one that allows HTTP and HTTPS traffic. You can select the security group that was created for the template instance.
-   - Listeners and routing: Create a new target group for the load balancer to route traffic to the instances. The listener is the port where our application will be listening, in this case port 80. The target group is the group of instances that will receive the traffic from the load balancer. You can create a new target group or select an existing one.
-   - Register targets: You can skip this step for now, since we will register the targets later when we create the auto-scaling group.
-
-### Create AMI from the template instance
-
-1. Go to the EC2 Dashboard.
-2. Click on "Instances" in the left sidebar.
-3. Select the instance you want to create an AMI from.
-4. Click on "Actions" > "Image and templates" > "Create image."
-5. Fill in the details for the image:
-   - Image name: `your_name`
-   - Description: `your_description`
-   - Volume: Select your volume and its settings.
-6. Click on "Create image."
-
-### Create Auto Scaling Group
-
-1. Go to the EC2 Dashboard.
-2. Click on "Auto Scaling Groups" in the left sidebar.
-3. Click on "Create Auto Scaling group."
-4. Choose the launch template you created earlier.
-    - Select instance type you want to use for the auto-scaling group.
-    - Select the security group you created for the template instance.
-    - In advance template settings, mount a sh file that will run the application when the instance is launched.
-    ```bash
-    #!/bin/bash
-    cd /home/ubuntu/project-2-tet/bookstore-monolith-2
-    docker compose up -d
-    ```
-5. Select the VPC and the availability Zones where you want to launch the instances.
-6. Select the load balancer you created earlier.
-7. Health check: true. To kill instances that are not running.
-8. Configure scaling policies:
-   - Choose "Create a new scaling policy."
-   - Leave the default settings for the scaling policy. If half of the CPU is used for 300 seconds, a new instance will be created.
-9. Continue without changing the rest of the settings.

@@ -1,5 +1,5 @@
-from flask import Blueprint, request, redirect, url_for
-from flask_login import login_required, current_user
+from flask import Blueprint, request, redirect, url_for, session
+from utils.utils import check_user_auth
 
 from models.purchase import Purchase
 from models.book import Book
@@ -8,12 +8,14 @@ from extensions import db
 purchase = Blueprint('purchase', __name__)
 
 @purchase.route('/buy/<int:book_id>', methods=['POST'])
-@login_required
 def buy(book_id):
     """
     Handle book purchase by a logged-in user.
     Checks stock and creates a new purchase, reducing book inventory.
     """
+    user = check_user_auth(session.get('token'))
+    if not user:
+        return redirect(url_for('auth.login'))
     quantity = int(request.form.get('quantity'))
     price = float(request.form.get('price'))
 
@@ -26,7 +28,7 @@ def buy(book_id):
 
     # Create purchase
     new_purchase = Purchase(
-        user_id=current_user.id,
+        user_id=user["id"],
         book_id=book_id,
         quantity=quantity,
         total_price=total_price,

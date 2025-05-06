@@ -7,16 +7,12 @@ Re-engineer the BookStore Monolitica app, to be divided into 3 coordinating micr
 ## Objective Completion Features
 
 - [x] Completed
-- **Extension of objective 1**: This new objective continues with what was implemented in objective 1, separating the different functionalities under subdomains of the application.
-- **Highly available database**: We used the Aurora and RDS service to deploy a highly available database in the cloud which integrates with our application, which will later allow for auto-scaling.
-- **Load balancer**: a load balancer was implemented that will redirect traffic between multiple service instances, which is the central axis in our scaling strategy, since each instance works with a remote database, so there is no dependency between application instances, something that could not be achieved following the monolithic architecture approach in objective 1.
-- **AWS Autoscaling**: An auto-scaling policy was implemented based on an image created from an EC2 instance, which defines that there can be between 1 to 6 application instances maximum, with a desired number of 2, which will increase on demand.
 - **Domain**: [objective3.p2tet.duckdns.org](https://objective2.p2tet.duckdns.org) is the domain which points to the Monolithic application with autoscaling.
 
 ## Table of Contents
-- [Objective 2](#objective-2)
+- [Objective 3](#objective-3)
 - [Objective Completion Features](#objective-completion-features)
-- [Bookstore Monolith](#bookstore-monolith)
+- [Bookstore 3 with Microservices](#bookstore-3-with-microservices)
 - [Table of Contents](#table-of-contents)
 - [Domain](#domain)
     - [Prerequisites](#prerequisites)
@@ -29,9 +25,6 @@ Re-engineer the BookStore Monolitica app, to be divided into 3 coordinating micr
   - [Installing Docker and Docker Compose](#installing-docker-and-docker-compose)
   - [Domain](#domain-1)
   - [Deploying the Application](#deploying-the-application)
-  - [Create ALB Load Balancer in EC2](#create-alb-load-balancer-in-ec2)
-  - [Create AMI from the template instance](#create-ami-from-the-template-instance)
-  - [Create Auto Scaling Group](#create-auto-scaling-group)
 
 
 # Authentication Microservice
@@ -204,60 +197,19 @@ Continue with the SSL certificate, domain and inverse proxy setup at [Reverse Pr
 1. Clone the repository:
 ```bash
 git clone https://github.com/JuanFelipeRestrepoBuitrago/project-2-tet.git
-cd project-2-tet/bookstore-monolith-2
+cd project-2-tet/auth-microservice
+```
+2. Create a `.env` file in the root directory of the project and set the environment variables as in the `.env.example` file:
+```bash
+FLASK_ENV=production
+SECRET_KEY=secretkey
+SQLALCHEMY_TRACK_MODIFICATIONS=False
+WRITE_ENGINE=mysql+pymysql://YOUR_USER:YOUR_PASS@YOUR_URL/YOUR_DB
+READER_ENGINE=mysql+pymysql://YOUR_USER:YOUR_PASS@YOUR_URL/YOUR_DB
+CREATION_DB=mysql+pymysql://YOUR_USER:YOUR_PASS@YOUR_URL/YOUR_DB
 ```
 
-2. Run the application:
+3. Run the application:
 ```bash
 docker compose up -d
 ```
-
-### Create ALB Load Balancer in EC2
-
-1. Go to the EC2 Dashboard.
-2. Click on "Load Balancers" in the left sidebar.
-3. Click on "Create Load Balancer."
-4. Choose "Application Load Balancer" with the ALB option.
-5. Configure the load balancer:
-   - Name: `your_name`
-   - Scheme: `internet-facing`
-   - IP address type: `ipv4`
-   - Listeners: HTTP (port 80) and HTTPS (port 443)
-   - Availability Zones: Select the VPC and subnets where your instances are going to be launched. You don't need to select the zone where the template is launched, since the load balancer will be responsible for distributing the traffic.
-   - Security groups: Create a new security group or select an existing one that allows HTTP and HTTPS traffic. You can select the security group that was created for the template instance.
-   - Listeners and routing: Create a new target group for the load balancer to route traffic to the instances. The listener is the port where our application will be listening, in this case port 80. The target group is the group of instances that will receive the traffic from the load balancer. You can create a new target group or select an existing one.
-   - Register targets: You can skip this step for now, since we will register the targets later when we create the auto-scaling group.
-
-### Create AMI from the template instance
-
-1. Go to the EC2 Dashboard.
-2. Click on "Instances" in the left sidebar.
-3. Select the instance you want to create an AMI from.
-4. Click on "Actions" > "Image and templates" > "Create image."
-5. Fill in the details for the image:
-   - Image name: `your_name`
-   - Description: `your_description`
-   - Volume: Select your volume and its settings.
-6. Click on "Create image."
-
-### Create Auto Scaling Group
-
-1. Go to the EC2 Dashboard.
-2. Click on "Auto Scaling Groups" in the left sidebar.
-3. Click on "Create Auto Scaling group."
-4. Choose the launch template you created earlier.
-    - Select instance type you want to use for the auto-scaling group.
-    - Select the security group you created for the template instance.
-    - In advance template settings, mount a sh file that will run the application when the instance is launched.
-    ```bash
-    #!/bin/bash
-    cd /home/ubuntu/project-2-tet/bookstore-monolith-2
-    docker compose up -d
-    ```
-5. Select the VPC and the availability Zones where you want to launch the instances.
-6. Select the load balancer you created earlier.
-7. Health check: true. To kill instances that are not running.
-8. Configure scaling policies:
-   - Choose "Create a new scaling policy."
-   - Leave the default settings for the scaling policy. If half of the CPU is used for 300 seconds, a new instance will be created.
-9. Continue without changing the rest of the settings.

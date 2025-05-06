@@ -1,6 +1,6 @@
 import os
 from flask import Flask, render_template
-from extensions import db, login_manager
+from extensions import db
 from models.user import User
 from config import config
 
@@ -13,12 +13,6 @@ def create_app(config_name=None):
     app.config.from_object(config[config_name])
     
     db.init_app(app)
-    login_manager.init_app(app)
-    login_manager.login_view = 'auth.login'
-    
-    @login_manager.user_loader
-    def load_user(user_id):
-        return User.query.get(int(user_id))
     
     # Registrar Blueprints
     from controllers.auth_controller import auth
