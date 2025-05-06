@@ -95,7 +95,7 @@ An auto-scaling policy was configured that creates new instances of the applicat
 1. Clone the repository:
 ```bash
 git clone https://github.com/JuanFelipeRestrepoBuitrago/project-2-tet.git
-cd project-2-tet/bookstore-monolith
+cd project-2-tet/auth-microservice
 ```
 
 2. Create a virtual environment (optional):

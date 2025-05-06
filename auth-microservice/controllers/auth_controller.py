@@ -1,5 +1,4 @@
 from flask import Blueprint, request, jsonify, current_app
-from flask_login import login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from models.user import User
 from extensions import db
@@ -77,7 +76,6 @@ def register():
         return jsonify({'error': 'Registration failed', 'details': str(e)}), 500
 
 @auth.route('/logout', methods=['POST'])
-@login_required
 def logout():
     """
     Log out the current user.

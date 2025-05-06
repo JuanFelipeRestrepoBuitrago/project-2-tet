@@ -1,7 +1,7 @@
 services:
-  flaskapp:
-    image: ghcr.io/juanfeliperestrepobuitrago/project-2-tet/bookstore-monolith:v2.0.0
-    container_name: bookstore-monolith-objetive2
+  flaskapp-microservice-auth:
+    image: ghcr.io/juanfeliperestrepobuitrago/project-2-tet/auth-microservice:latest
+    container_name: microservice-auth
     restart: always
     env_file:
       - .env
