@@ -3,6 +3,7 @@ import os
 class Config:
     """Configuración base de la aplicación"""
     SECRET_KEY = os.getenv('SECRET_KEY', 'secretkey')
+    JWT_SECRET_KEY = SECRET_KEY
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     SQLALCHEMY_DATABASE_URI_WRITE = os.getenv('WRITE_ENGINE')
@@ -29,6 +30,7 @@ class ProductionConfig(Config):
     @classmethod
     def init_app(cls, app):
         assert cls.SQLALCHEMY_DATABASE_URI_WRITE, "No se ha definido WRITE_ENGINE"
+        assert cls.JWT_SECRET_KEY, "No se ha definido JWT_SECRET_KEY"
         
         if not cls.SQLALCHEMY_DATABASE_URI_READ:
             app.logger.warning("No se ha definido READER_ENGINE, usando WRITE_ENGINE para ambos")

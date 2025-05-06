@@ -1,8 +1,7 @@
 import os
-from flask import Flask, render_template
-from extensions import db, login_manager
+from flask import Flask
+from extensions import db
 from controllers.auth_controller import auth
-from models.user import User
 from config import config
 
 def create_app(config_name=None):
@@ -14,14 +13,7 @@ def create_app(config_name=None):
     app.config.from_object(config[config_name])
     
     db.init_app(app)
-    login_manager.init_app(app)
-    login_manager.login_view = 'auth.login'
-    
-    @login_manager.user_loader
-    def load_user(user_id):
-        return User.query.get(int(user_id))
-    
-    app.register_blueprint(auth)
+    app.register_blueprint(auth, url_prefix='/auth')
     
     return app
 

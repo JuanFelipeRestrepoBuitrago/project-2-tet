@@ -45,83 +45,6 @@ The authentication microservice is responsible for managing user authentication 
 
 ### Strategy
 The authentication microservice is designed to be stateless, meaning it does not store any session information on the server. Instead, it relies on JWT tokens to authenticate users. When a user logs in, the microservice generates a JWT token that contains the user's information and expiration time. This token is then sent back to the client and must be included in subsequent requests to access protected resources.
-### Code changes
-The initial **Bookstore** application was a monolith that was deployed in two docker containers, one with the application and another with the database. This approach limited its scalability in that it depended on a database docker container on the same network. The first step in our scaling strategy was to decouple this relationship between the application and the database, using one in AWS, which guarantees us high availability and fault tolerance, thus fulfilling one of the requirements of this objective (more on the database will be discussed in its respective section).
-
-The main changes in the code were:
-1. Introduction of the setup_db file, which serves the function of creating the database if it is not already created.
-2. Introduction of the **_bindings_** file whose main responsibility is to handle routing between reading and writing databases, since the selected database implements two different endpoints, one for reading and another for writing data.
-3. Introduction of the **_config.py_** file that serves to select between using production and development database, to facilitate the development stage.
-4. There were major changes to the **_extensions.py_** file, as it now initializes the application to use the routing functionality between database endpoints.
-5. There were major changes to the **_app.py_** file, refactoring code to make it much simpler to use with the new functionality.
-
-The following code snippets allow us to appreciate the core of the change made to support the new database:
-```python
-class RoutingSQLAlchemy(SQLAlchemy):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.write_engine_url = None
-        self.read_engine_url = None
-
-    def init_app(self, app):
-        """Initializes the application with DB routing support"""
-        super().init_app(app)
-        
-        self.write_engine_url = app.config['SQLALCHEMY_DATABASE_URI_WRITE']
-        self.read_engine_url = app.config['SQLALCHEMY_DATABASE_URI_READ']
-        
-        if not self.read_engine_url:
-            self.read_engine_url = self.write_engine_url
-            
-        session = create_routing_session(self.write_engine_url, self.read_engine_url)
-        
-        self.session = session
-```
-```python
-class RoutingSession(scoped_session):
-    def __init__(self, write_session_factory, read_session_factory):
-        """
-        Initializes the routing session with factories for writing and reading
-        """
-        self.write_session_factory = write_session_factory
-        self.read_session_factory = read_session_factory
-        super().__init__(write_session_factory)
-
-    def get_bind(self, mapper=None, clause=None):
-        """
-        Determines which database to use based on the type of operation
-        """
-        if self._flushing or self.info.get('writing'):
-            return self.write_session_factory.kw['bind']
-        else:
-            return self.read_session_factory.kw['bind']
-
-    def using_write_bind(self):
-        """
-        Marks the session to use the write endpoint
-        """
-        self.info['writing'] = True
-        return self
-    
-    def remove(self):
-        """
-        Cleans up session references
-        """
-        self.info.pop('writing', None)
-        super().remove()
-
-def create_routing_session(write_engine_url, read_engine_url):
-    """
-    Creates a session that handles routing between read and write databases
-    """
-    write_engine = create_engine(write_engine_url, pool_recycle=3600)
-    read_engine = create_engine(read_engine_url, pool_recycle=3600)
-    
-    write_session_factory = sessionmaker(bind=write_engine)
-    read_session_factory = sessionmaker(bind=read_engine)
-    
-    return RoutingSession(write_session_factory, read_session_factory)
-```
 
 ## Database configuration
 The characteristics provided by the database we created in AWS are:
@@ -164,6 +87,65 @@ A load balancer was created together with a target group to which all new instan
 
 ## Autoscaling configuration
 An auto-scaling policy was configured that creates new instances of the application to the target group, specifically a policy in which when 50 percent of CPU resources are consistently used for 300 seconds, a new instance of the application is created.
+
+## Set up Development
+
+### Execution
+
+1. Clone the repository:
+```bash
+git clone https://github.com/JuanFelipeRestrepoBuitrago/project-2-tet.git
+cd project-2-tet/bookstore-monolith
+```
+
+2. Create a virtual environment (optional):
+```bash
+python3 -m venv venv
+source venv/bin/activate
+```
+3. Install the required packages:
+```bash
+pip install -r requirements.txt
+```
+4. Execute the database or docker compose with the following specifications:
+```bash
+MYSQL_DATABASE: bookstore
+MYSQL_USER: bookstore_user
+MYSQL_PASSWORD: 123
+MYSQL_ROOT_PASSWORD: 123
+```
+or docker compose with the following specifications:
+```bash
+docker compose -f ./docker-compose-dev.yml up -d
+```
+5. Set up the environment variables as in the `.env.example` file:
+In windows run:
+```bash
+set FLASK_ENV=development
+set SECRET_KEY=secretkey
+set SQLALCHEMY_TRACK_MODIFICATIONS=False
+set WRITE_ENGINE=mysql+pymysql://bookstore_user:123@localhost/bookstore
+set READER_ENGINE=mysql+pymysql://bookstore_user:123@localhost/bookstore
+set CREATION_DB=mysql+pymysql://bookstore_user:123@localhost/bookstore
+```
+or in Linux run:
+```bash
+export FLASK_ENV=development
+export SECRET_KEY=secretkey
+export SQLALCHEMY_TRACK_MODIFICATIONS=False
+export WRITE_ENGINE=mysql+pymysql://bookstore_user:123@localhost/bookstore
+export READER_ENGINE=mysql+pymysql://bookstore_user:123@localhost/bookstore
+export CREATION_DB=mysql+pymysql://bookstore_user:123@localhost/bookstore
+```
+6. Run the application:
+```bash
+python app.py
+```
+7. Access the application at `http://localhost:5000`.
+8. To stop the application, press `Ctrl+C` in the terminal where the application is running and to stop the docker compose, run:
+```bash
+docker compose -f ./docker-compose-dev.yml down
+```
 
 ## Set up Deployment
 

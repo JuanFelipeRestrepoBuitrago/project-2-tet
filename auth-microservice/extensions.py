@@ -1,6 +1,4 @@
-import os
 from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager
 from bindings import create_routing_session
 
 class RoutingSQLAlchemy(SQLAlchemy):
@@ -24,4 +22,3 @@ class RoutingSQLAlchemy(SQLAlchemy):
         self.session = session
 
 db = RoutingSQLAlchemy()
-login_manager = LoginManager()
