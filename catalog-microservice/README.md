@@ -1,5 +1,5 @@
 # Objective 3
-Re-engineer the BookStore Monolitica app, to be divided into 3 coordinating microservices:
+Re-engineer the BookStore Monolithic app, to be divided into 3 coordinating microservices:
 - Microservice 1: Authentication: will manage register, login, logout.
 - Microservice 2: Catalog: will allow to visualize the offer of books on the platform.
 - Microservice 3: Purchase, Payment and Delivery of books sold on the platform.
@@ -27,9 +27,24 @@ Re-engineer the BookStore Monolitica app, to be divided into 3 coordinating micr
     - [Installing Docker and Docker Compose](#installing-docker-and-docker-compose)
     - [Domain](#domain-1)
     - [Deploying the Application](#deploying-the-application)
+  - [Project Structure](#project-structure)
+  - [API Endpoints](#api-endpoints)
+    - [Books](#books)
+    - [Usage Examples](#usage-examples)
+      - [Get all books](#get-all-books)
+      - [Create a new book](#create-a-new-book)
+  - [Development](#development)
+    - [Running Tests](#running-tests)
+    - [Linting](#linting)
+    - [Code Formatting](#code-formatting)
+  - [Deployment](#deployment)
+    - [Production](#production)
+  - [Contributing](#contributing)
+  - [License](#license)
+
 
 # Catalog Microservice
-The catalog microservice is responsible for managing and displaying the list of books available in the bookstore. It provides endpoints to view, add, update and delete book entries.
+The catalog microservice is responsible for managing the book catalog, providing endpoints for viewing, adding, updating, and deleting books. It provides a RESTful API for all book-related operations.
 
 ## Domain
 
@@ -38,7 +53,12 @@ The catalog microservice is responsible for managing and displaying the list of 
 - Docker and Docker Compose
 
 ### Strategy
-The catalog microservice is designed to be independent and focused on all catalog-related logic. It connects to the shared bookstore database and exposes endpoints for book retrieval and management. It uses SQLAlchemy with read/write routing logic, and Flask to manage views or API endpoints.
+The catalog microservice is designed to handle all book-related operations. It provides endpoints for:
+- Viewing all books in the catalog
+- Viewing individual book details
+- Adding new books to the catalog
+- Updating existing book information
+- Deleting books from the catalog
 
 ## Database configuration
 The characteristics provided by the database we created in AWS are:
@@ -89,7 +109,7 @@ An auto-scaling policy was configured that creates new instances of the applicat
 1. Clone the repository:
 ```bash
 git clone https://github.com/JuanFelipeRestrepoBuitrago/project-2-tet.git
-cd project-2-tet/catalog-microservice
+cd project-2-tet/catalog_microservice
 ```
 
 2. Create a virtual environment (optional):
@@ -97,10 +117,12 @@ cd project-2-tet/catalog-microservice
 python3 -m venv venv
 source venv/bin/activate
 ```
+
 3. Install the required packages:
 ```bash
 pip install -r requirements.txt
 ```
+
 4. Execute the database or docker compose with the following specifications:
 ```bash
 MYSQL_DATABASE: bookstore
@@ -112,6 +134,7 @@ or docker compose with the following specifications:
 ```bash
 docker compose -f ./docker-compose-dev.yml up -d
 ```
+
 5. Set up the environment variables as in the `.env.example` file:
 In windows run:
 ```bash
@@ -131,11 +154,14 @@ export WRITE_ENGINE=mysql+pymysql://bookstore_user:123@localhost/bookstore
 export READER_ENGINE=mysql+pymysql://bookstore_user:123@localhost/bookstore
 export CREATION_DB=mysql+pymysql://bookstore_user:123@localhost/bookstore
 ```
+
 6. Run the application:
 ```bash
 python app.py
 ```
-7. Access the application at `http://localhost:5002`.
+
+7. Access the application at `http://localhost:5001`.
+
 8. To stop the application, press `Ctrl+C` in the terminal where the application is running and to stop the docker compose, run:
 ```bash
 docker compose -f ./docker-compose-dev.yml down
@@ -168,6 +194,7 @@ sudo apt install -y apt-transport-https ca-certificates curl software-properties
 ```bash
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/docker-archive-keyring.gpg
 ```
+
 3. Set up the stable repository:
 ```bash
 sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
@@ -177,14 +204,17 @@ sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubun
 ```bash
 sudo apt update && sudo apt install -y docker-ce docker-ce-cli containerd.io
 ```
+
 5. Start and enable Docker:
 ```bash
 sudo usermod -aG docker $USER && logout && sudo systemctl restart docker
 ```
+
 6. Verify Docker installation:
 ```bash
 docker --version
 ```
+
 7. Verify Docker Compose installation:
 ```bash
 docker compose --version
@@ -194,11 +224,13 @@ docker compose --version
 Continue with the SSL certificate, domain and inverse proxy setup at [Reverse Proxy](../reverse-proxy/README.md)
 
 ### Deploying the Application
+
 1. Clone the repository:
 ```bash
 git clone https://github.com/JuanFelipeRestrepoBuitrago/project-2-tet.git
-cd project-2-tet/catalog-microservice
+cd project-2-tet/catalog_microservice
 ```
+
 2. Create a `.env` file in the root directory of the project and set the environment variables as in the `.env.example` file:
 ```bash
 FLASK_ENV=production
@@ -213,3 +245,96 @@ CREATION_DB=mysql+pymysql://YOUR_USER:YOUR_PASS@YOUR_URL/YOUR_DB
 ```bash
 docker compose up -d
 ```
+
+## Project Structure
+
+```
+catalog_microservice/
+├── controllers/         # Application controllers
+├── models/             # Data models
+├── utils/              # Utilities and helpers
+├── app.py             # Application entry point
+├── config.py          # Configuration
+├── extensions.py      # Flask extensions
+├── requirements.txt   # Dependencies
+└── Dockerfile         # Docker configuration
+```
+
+## API Endpoints
+
+### Books
+
+- `GET /api/v1/books`: Get all books
+- `GET /api/v1/books/<id>`: Get a specific book
+- `POST /api/v1/books`: Create a new book
+- `PUT /api/v1/books/<id>`: Update an existing book
+- `DELETE /api/v1/books/<id>`: Delete a book
+
+### Usage Examples
+
+#### Get all books
+```bash
+curl http://localhost:5001/api/v1/books
+```
+
+#### Create a new book
+```bash
+curl -X POST http://localhost:5001/api/v1/books \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Don Quixote",
+    "author": "Miguel de Cervantes",
+    "description": "A classic novel",
+    "price": 29.99,
+    "stock": 10,
+    "seller_id": 1
+  }'
+```
+
+## Development
+
+### Running Tests
+
+```bash
+python -m pytest
+```
+
+### Linting
+
+```bash
+flake8
+```
+
+### Code Formatting
+
+```bash
+black .
+```
+
+## Deployment
+
+### Production
+
+1. Set production environment variables:
+```bash
+export FLASK_ENV=production
+export DATABASE_URL=<your-database-url>
+```
+
+2. Build and run with Docker:
+```bash
+docker-compose -f docker-compose.prod.yml up --build
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+

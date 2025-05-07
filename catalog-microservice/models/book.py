@@ -12,4 +12,4 @@ class Book(db.Model):
     seller_id = db.Column(db.Integer, nullable=False)
 
     def __repr__(self):
-        return f"<Book {self.title} by {self.author}>"
+        return f"<Book {self.title} by {self.author}>" 

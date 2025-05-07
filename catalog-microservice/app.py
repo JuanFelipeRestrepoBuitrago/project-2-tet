@@ -1,5 +1,5 @@
-from flask import Flask, render_template
-from extensions import db
+from flask import Flask
+from extensions import db, ma
 from config import config
 import os
 
@@ -9,19 +9,21 @@ def create_app(config_name=None):
 
     app = Flask(__name__)
     app.config.from_object(config[config_name])
+    
+    # Initialize extensions
     db.init_app(app)
-
+    ma.init_app(app)
+    
+    # Register blueprints
     from controllers.book_controller import book
-    app.register_blueprint(book, url_prefix='/book')
-
-    @app.route('/')
-    def home():
-        return render_template('catalog.html')
-
+    app.register_blueprint(book, url_prefix='/api/v1')
+    
+    # Create database tables
+    with app.app_context():
+        db.create_all()
+    
     return app
 
 if __name__ == '__main__':
     app = create_app()
-    with app.app_context():
-        db.create_all()
-    app.run(host="0.0.0.0", port=5002, debug=True)
+    app.run(host='0.0.0.0', port=5001) 

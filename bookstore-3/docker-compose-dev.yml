@@ -43,4 +43,4 @@ services:
       - READER_ENGINE=sqlite:///catalog.db
       - CREATION_DB=sqlite:///catalog.db
     volumes:
-      - ../catalog-microservice:/app
+      - ../catalog-microservice:/app 

@@ -1,4 +1,5 @@
-from flask import Blueprint, render_template, request, redirect, url_for, session
+from flask import Blueprint, render_template, request, redirect, url_for, session, current_app, flash
+import requests
 from utils.utils import check_user_auth
 
 from models.book import Book
@@ -12,9 +13,9 @@ def catalog():
     """
     Display all available books in the public catalog.
     """
-    # Login not required
     user = check_user_auth(session.get('token'))
-    books = Book.query.all()
+    response = requests.get(f'{current_app.config["CATALOG_SERVICE_URL"]}/api/v1/books')
+    books = response.json() if response.ok else []
     return render_template('catalog.html', books=books, my_user=user)
 
 # View books posted by the current user
@@ -40,17 +41,22 @@ def add_book():
         return redirect(url_for('auth.login'))
     
     if request.method == 'POST':
-        new_book = Book(
-            title=request.form.get('title'),
-            author=request.form.get('author'),
-            description=request.form.get('description'),
-            price=float(request.form.get('price')),
-            stock=int(request.form.get('stock')),
-            seller_id=user["id"]
+        response = requests.post(
+            f'{current_app.config["CATALOG_SERVICE_URL"]}/api/v1/books',
+            json={
+                'title': request.form.get('title'),
+                'author': request.form.get('author'),
+                'description': request.form.get('description'),
+                'price': float(request.form.get('price')),
+                'stock': int(request.form.get('stock')),
+                'seller_id': user['id']
+            },
+            headers={'Authorization': f'Bearer {session.get("token")}'}
         )
-        db.session.add(new_book)
-        db.session.commit()
-        return redirect(url_for('book.catalog'))
+        if response.ok:
+            return redirect(url_for('book.catalog'))
+        else:
+            flash('Error creating book. Please try again.', 'error')
 
     return render_template('add_book.html', my_user=user)
 
@@ -58,41 +64,57 @@ def add_book():
 @book.route('/edit_book/<int:book_id>', methods=['GET', 'POST'])
 def edit_book(book_id):
     """
-    Handle editing of an existing book by its owner.
+    Handle editing of an existing book.
     """
     user = check_user_auth(session.get('token'))
     if not user:
         return redirect(url_for('auth.login'))
-    book_to_edit = Book.query.get_or_404(book_id)
-    
-    if book_to_edit.seller_id != user["id"]:
-        return "No tienes permiso para editar este libro.", 403
 
     if request.method == 'POST':
-        book_to_edit.title = request.form.get('title')
-        book_to_edit.author = request.form.get('author')
-        book_to_edit.description = request.form.get('description')
-        book_to_edit.price = float(request.form.get('price'))
-        book_to_edit.stock = int(request.form.get('stock'))
-        db.session.commit()
-        return redirect(url_for('book.catalog'))
+        response = requests.put(
+            f'{current_app.config["CATALOG_SERVICE_URL"]}/api/v1/books/{book_id}',
+            json={
+                'title': request.form.get('title'),
+                'author': request.form.get('author'),
+                'description': request.form.get('description'),
+                'price': float(request.form.get('price')),
+                'stock': int(request.form.get('stock')),
+                'seller_id': user['id']
+            },
+            headers={'Authorization': f'Bearer {session.get("token")}'}
+        )
+        if response.ok:
+            return redirect(url_for('book.catalog'))
+        else:
+            flash('Error updating book. Please try again.', 'error')
 
-    return render_template('edit_book.html', book=book_to_edit, my_user=user)
+    # Get book details
+    response = requests.get(f'{current_app.config["CATALOG_SERVICE_URL"]}/api/v1/books/{book_id}')
+    if not response.ok:
+        flash('Book not found.', 'error')
+        return redirect(url_for('book.catalog'))
+    
+    book = response.json()
+    return render_template('edit_book.html', book=book, my_user=user)
 
 # Delete a book
 @book.route('/delete_book/<int:book_id>', methods=['POST'])
 def delete_book(book_id):
     """
-    Delete a book if the current user is the owner.
+    Handle deletion of a book.
     """
     user = check_user_auth(session.get('token'))
     if not user:
         return redirect(url_for('auth.login'))
-    book_to_delete = Book.query.get_or_404(book_id)
 
-    if book_to_delete.seller_id != user["id"]:
-        return "No tienes permiso para eliminar este libro.", 403
-
-    db.session.delete(book_to_delete)
-    db.session.commit()
+    response = requests.delete(
+        f'{current_app.config["CATALOG_SERVICE_URL"]}/api/v1/books/{book_id}',
+        headers={'Authorization': f'Bearer {session.get("token")}'}
+    )
+    
+    if response.ok:
+        flash('Book deleted successfully.', 'success')
+    else:
+        flash('Error deleting book. Please try again.', 'error')
+    
     return redirect(url_for('book.catalog'))
