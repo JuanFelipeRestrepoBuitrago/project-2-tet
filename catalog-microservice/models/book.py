@@ -9,8 +9,7 @@ class Book(db.Model):
     description = db.Column(db.Text, nullable=True)
     price = db.Column(db.Float, nullable=False)
     stock = db.Column(db.Integer, nullable=False, default=0)
-
-    seller_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    seller_id = db.Column(db.Integer, nullable=False)
 
     def __repr__(self):
         return f"<Book {self.title} by {self.author}>"

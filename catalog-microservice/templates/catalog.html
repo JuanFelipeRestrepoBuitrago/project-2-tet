@@ -13,15 +13,6 @@
       
       {% if book.stock > 0 %}
         <p class="text-green-600 font-medium mb-2">Unidades disponibles: {{ book.stock }}</p>
-        <form method="POST" action="{{ url_for('purchase.buy', book_id=book.id) }}" class="space-y-3">
-          <input type="hidden" name="price" value="{{ book.price }}">
-          <input type="number" name="quantity" value="1" min="1"
-                 class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-black focus:border-black bg-gray-50">
-          <button type="submit"
-                  class="w-full bg-black text-white py-2 rounded-md hover:bg-gray-900 transition">
-            Comprar
-          </button>
-        </form>
       {% else %}
         <p class="text-red-600 font-semibold">No disponibles</p>
       {% endif %}

@@ -1,44 +1,16 @@
-from flask import Blueprint, render_template, request, redirect, url_for, session
-from utils.utils import check_user_auth
-
+from flask import Blueprint, render_template, request, redirect, url_for
 from models.book import Book
 from extensions import db
 
 book = Blueprint('book', __name__)
 
-# Public catalog view
 @book.route('/catalog')
 def catalog():
-    """
-    Display all available books in the public catalog.
-    """
-    # Login not required
-    user = check_user_auth(session.get('token'))
     books = Book.query.all()
-    return render_template('catalog.html', books=books, my_user=user)
+    return render_template('catalog.html', books=books)
 
-# View books posted by the current user
-@book.route('/my_books')
-def my_books():
-    """
-    Display books created by the currently logged-in user.
-    """
-    user = check_user_auth(session.get('token'))
-    if not user:
-        return redirect(url_for('auth.login'))
-    books = Book.query.filter_by(seller_id=user["id"]).all()
-    return render_template('my_books.html', books=books, my_user=user)
-
-# Add a new book
 @book.route('/add_book', methods=['GET', 'POST'])
 def add_book():
-    """
-    Handle creation of a new book by the logged-in user.
-    """
-    user = check_user_auth(session.get('token'))
-    if not user:
-        return redirect(url_for('auth.login'))
-    
     if request.method == 'POST':
         new_book = Book(
             title=request.form.get('title'),
@@ -46,27 +18,22 @@ def add_book():
             description=request.form.get('description'),
             price=float(request.form.get('price')),
             stock=int(request.form.get('stock')),
-            seller_id=user["id"]
+            seller_id=1  
         )
         db.session.add(new_book)
         db.session.commit()
         return redirect(url_for('book.catalog'))
 
-    return render_template('add_book.html', my_user=user)
+    return render_template('add_book.html')
 
-# Edit an existing book
+@book.route('/my_books')
+def my_books():
+    books = Book.query.all()  
+    return render_template('my_books.html', books=books)
+
 @book.route('/edit_book/<int:book_id>', methods=['GET', 'POST'])
 def edit_book(book_id):
-    """
-    Handle editing of an existing book by its owner.
-    """
-    user = check_user_auth(session.get('token'))
-    if not user:
-        return redirect(url_for('auth.login'))
     book_to_edit = Book.query.get_or_404(book_id)
-    
-    if book_to_edit.seller_id != user["id"]:
-        return "No tienes permiso para editar este libro.", 403
 
     if request.method == 'POST':
         book_to_edit.title = request.form.get('title')
@@ -77,22 +44,11 @@ def edit_book(book_id):
         db.session.commit()
         return redirect(url_for('book.catalog'))
 
-    return render_template('edit_book.html', book=book_to_edit, my_user=user)
+    return render_template('edit_book.html', book=book_to_edit)
 
-# Delete a book
 @book.route('/delete_book/<int:book_id>', methods=['POST'])
 def delete_book(book_id):
-    """
-    Delete a book if the current user is the owner.
-    """
-    user = check_user_auth(session.get('token'))
-    if not user:
-        return redirect(url_for('auth.login'))
     book_to_delete = Book.query.get_or_404(book_id)
-
-    if book_to_delete.seller_id != user["id"]:
-        return "No tienes permiso para eliminar este libro.", 403
-
     db.session.delete(book_to_delete)
     db.session.commit()
     return redirect(url_for('book.catalog'))
