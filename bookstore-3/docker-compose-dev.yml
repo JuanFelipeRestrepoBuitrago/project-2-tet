@@ -1,27 +1,6 @@
 version: '3.8'
 
 services:
-  bookstore:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    ports:
-      - "5000:5000"
-    environment:
-      - FLASK_ENV=development
-      - SECRET_KEY=secretkey
-      - WRITE_ENGINE=mysql+pymysql://bookstore_user:123@db/bookstore
-      - READER_ENGINE=mysql+pymysql://bookstore_user:123@db/bookstore
-      - CREATION_DB=mysql+pymysql://bookstore_user:123@db/bookstore
-      - AUTH_SERVICE_URL=http://auth-microservice:5000/auth
-      - CATALOG_SERVICE_URL=http://catalog-microservice:5000
-    depends_on:
-      - auth-microservice
-      - catalog-microservice
-      - db
-    networks:
-      - bookstore_net
-
   auth-microservice:
     build:
       context: ../auth-microservice
@@ -60,6 +39,7 @@ services:
 
   db:
     image: mysql:8.4.0
+    container_name: bookstore_db
     restart: always
     environment:
       MYSQL_DATABASE: bookstore
@@ -70,6 +50,28 @@ services:
       - "3306:3306"
     volumes:
       - db_data:/var/lib/mysql
+    networks:
+      - bookstore_net
+
+  bookstore:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: bookstore
+    depends_on:
+      - db
+      - auth-microservice
+      - catalog-microservice
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=development
+      - SECRET_KEY=secretkey
+      - WRITE_ENGINE=mysql+pymysql://bookstore_user:123@db/bookstore
+      - READER_ENGINE=mysql+pymysql://bookstore_user:123@db/bookstore
+      - CREATION_DB=mysql+pymysql://bookstore_user:123@db/bookstore
+      - AUTH_SERVICE_URL=http://auth-microservice:5000/auth
+      - CATALOG_SERVICE_URL=http://catalog-microservice:5000
     networks:
       - bookstore_net
 

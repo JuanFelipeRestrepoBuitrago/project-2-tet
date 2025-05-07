@@ -1,8 +1,9 @@
 import os
 from flask import Flask, render_template
 from extensions import db
-from models.user import User
 from config import config
+from flask import render_template, session
+from utils.utils import check_user_auth
 
 def create_app(config_name=None):
     """Crea y configura la aplicación Flask"""
@@ -32,7 +33,8 @@ def create_app(config_name=None):
     # Ruta principal
     @app.route('/')
     def home():
-        return render_template('home.html')
+        user = check_user_auth(session.get('token'))
+        return render_template('home.html', my_user=user)
     
     return app
 
