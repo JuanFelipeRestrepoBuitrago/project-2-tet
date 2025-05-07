@@ -1,8 +1,6 @@
-version: '3.8'
-
 services:
   flaskapp-microservice-catalog:
-    build: ./catalog-microservice
+    build: .
     container_name: microservice-catalog
     restart: always
     env_file:
