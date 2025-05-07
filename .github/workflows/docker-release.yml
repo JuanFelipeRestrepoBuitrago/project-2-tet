@@ -63,3 +63,14 @@ jobs:
           tags: |
             ghcr.io/juanfeliperestrepobuitrago/project-2-tet/auth-microservice:${{ env.TAG }}
             ghcr.io/juanfeliperestrepobuitrago/project-2-tet/auth-microservice:latest
+
+      - name: Build and Push Catalog Microservice Image to GHRC
+        uses: docker/build-push-action@v5
+        with:
+          context: ./auth-microservice
+          platforms: linux/amd64,linux/arm64
+          push: true
+          provenance: false 
+          tags: |
+            ghcr.io/juanfeliperestrepobuitrago/project-2-tet/catalog-microservice:${{ env.TAG }}
+            ghcr.io/juanfeliperestrepobuitrago/project-2-tet/catalog-microservice:latest
