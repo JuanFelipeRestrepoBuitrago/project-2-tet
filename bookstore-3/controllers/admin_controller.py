@@ -1,6 +1,6 @@
-from flask import Blueprint, render_template, session, redirect, url_for
+from flask import Blueprint, render_template, redirect, url_for, flash, session, current_app
+import requests
 from utils.utils import check_user_auth
-from models.user import User
 
 admin = Blueprint('admin', __name__)
 
@@ -13,5 +13,13 @@ def list_users():
     user = check_user_auth(session.get('token'))
     if not user:
         return redirect(url_for('home'))
-    users = User.query.all()
-    return render_template('list_users.html', users=users, my_user=user)
+    
+    headers = {'Authorization': f'Bearer {session.get("token")}'}
+    response = requests.get(f'{current_app.config["AUTH_SERVICE_URL"]}/admin/users', headers=headers)
+    if response.ok:
+        users = response.json()
+        return render_template('list_users.html', users=users, my_user=user)
+    else:
+        flash('Error fetching users. Please try again.', 'error')
+        return redirect(url_for('home'))
+    

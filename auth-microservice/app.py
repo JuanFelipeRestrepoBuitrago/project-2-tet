@@ -2,6 +2,7 @@ import os
 from flask import Flask
 from extensions import db
 from controllers.auth_controller import auth
+from controllers.admin_controller import admin
 from config import config
 
 def create_app(config_name=None):
@@ -14,6 +15,7 @@ def create_app(config_name=None):
     
     db.init_app(app)
     app.register_blueprint(auth, url_prefix='/auth')
+    app.register_blueprint(admin, url_prefix='/auth')
     
     return app
 

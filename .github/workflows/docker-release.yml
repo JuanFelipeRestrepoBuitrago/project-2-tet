@@ -67,7 +67,7 @@ jobs:
       - name: Build and Push Catalog Microservice Image to GHRC
         uses: docker/build-push-action@v5
         with:
-          context: ./auth-microservice
+          context: ./catalog-microservice
           platforms: linux/amd64,linux/arm64
           push: true
           provenance: false 

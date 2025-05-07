@@ -2,9 +2,6 @@ from flask import Blueprint, render_template, request, redirect, url_for, sessio
 import requests
 from utils.utils import check_user_auth
 
-from models.book import Book
-from extensions import db
-
 book = Blueprint('book', __name__)
 
 # Public catalog view
