@@ -32,6 +32,7 @@ class ProductionConfig(Config):
     def init_app(cls, app):
         assert cls.SQLALCHEMY_DATABASE_URI_WRITE, "No se ha definido WRITE_ENGINE"
         assert cls.AUTH_SERVICE_URL, "No se ha definido AUTH_SERVICE_URL"
+        assert cls.CATALOG_SERVICE_URL, "No se ha definido CATALOG_SERVICE_URL"
         
         if not cls.SQLALCHEMY_DATABASE_URI_READ:
             app.logger.warning("No se ha definido READER_ENGINE, usando WRITE_ENGINE para ambos")

@@ -1,46 +1,9 @@
-version: '3.8'
-
 services:
-  bookstore:
-    build: .
+  flaskapp:
+    image: ghcr.io/juanfeliperestrepobuitrago/project-2-tet/bookstore-monolith:latest
+    container_name: bookstore-objetive3
+    restart: always
+    env_file:
+      - .env
     ports:
-      - "5003:5000"
-    environment:
-      - FLASK_ENV=development
-      - SECRET_KEY=your-secret-key-here
-      - WRITE_ENGINE=sqlite:///bookstore.db
-      - READER_ENGINE=sqlite:///bookstore.db
-      - CREATION_DB=sqlite:///bookstore.db
-      - AUTH_SERVICE_URL=http://auth-microservice:5002
-      - CATALOG_SERVICE_URL=http://catalog-microservice:5001
-    volumes:
-      - .:/app
-    depends_on:
-      - auth-microservice
-      - catalog-microservice
-
-  auth-microservice:
-    build: ../auth-microservice
-    ports:
-      - "5002:5002"
-    environment:
-      - FLASK_ENV=development
-      - SECRET_KEY=your-secret-key-here
-      - WRITE_ENGINE=sqlite:///auth.db
-      - READER_ENGINE=sqlite:///auth.db
-      - CREATION_DB=sqlite:///auth.db
-    volumes:
-      - ../auth-microservice:/app
-
-  catalog-microservice:
-    build: ../catalog-microservice
-    ports:
-      - "5001:5001"
-    environment:
-      - FLASK_ENV=development
-      - SECRET_KEY=your-secret-key-here
-      - WRITE_ENGINE=sqlite:///catalog.db
-      - READER_ENGINE=sqlite:///catalog.db
-      - CREATION_DB=sqlite:///catalog.db
-    volumes:
-      - ../catalog-microservice:/app
+      - "80:5000"

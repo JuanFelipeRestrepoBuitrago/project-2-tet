@@ -1,22 +1,4 @@
 services:
-  flaskapp-microservice-auth:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: microservice-auth
-    restart: always
-    depends_on:
-      - db
-    environment:
-      - FLASK_ENV=development
-      - WRITE_ENGINE=mysql+pymysql://bookstore_user:123@db/bookstore
-      - READER_ENGINE=mysql+pymysql://bookstore_user:123@db/bookstore
-      - SECRET_KEY=secretkey
-    ports:
-      - "5001:5000"
-    networks:
-      - bookstore_net
-
   db:
     image: mysql:8.4.0
     restart: always

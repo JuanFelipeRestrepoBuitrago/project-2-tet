@@ -81,4 +81,19 @@ def delete_book(book_id):
     book = Book.query.get_or_404(book_id)
     db.session.delete(book)
     db.session.commit()
-    return '', 204 
+    return '', 204
+
+@book.route('/my-books', methods=['POST'])
+def get_my_books():
+    """Get books created by the current user"""
+    data = request.get_json()
+    books = Book.query.filter_by(seller_id=data["user_id"]).all()
+    return jsonify([{
+        'id': book.id,
+        'title': book.title,
+        'author': book.author,
+        'description': book.description,
+        'price': book.price,
+        'stock': book.stock,
+        'seller_id': book.seller_id
+    } for book in books])

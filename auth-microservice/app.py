@@ -15,11 +15,10 @@ def create_app(config_name=None):
     db.init_app(app)
     app.register_blueprint(auth, url_prefix='/auth')
     
-    with app.app_context():
-        db.create_all()
-    
     return app
 
 if __name__ == '__main__':
     app = create_app()
-    app.run(host='0.0.0.0', port=5002)
+    with app.app_context():
+        db.create_all()
+    app.run(host="0.0.0.0", debug=True)

@@ -160,7 +160,7 @@ export CREATION_DB=mysql+pymysql://bookstore_user:123@localhost/bookstore
 python app.py
 ```
 
-7. Access the application at `http://localhost:5001`.
+7. Access the application at `http://localhost:5000`.
 
 8. To stop the application, press `Ctrl+C` in the terminal where the application is running and to stop the docker compose, run:
 ```bash
@@ -258,37 +258,6 @@ catalog_microservice/
 ├── extensions.py      # Flask extensions
 ├── requirements.txt   # Dependencies
 └── Dockerfile         # Docker configuration
-```
-
-## API Endpoints
-
-### Books
-
-- `GET /api/v1/books`: Get all books
-- `GET /api/v1/books/<id>`: Get a specific book
-- `POST /api/v1/books`: Create a new book
-- `PUT /api/v1/books/<id>`: Update an existing book
-- `DELETE /api/v1/books/<id>`: Delete a book
-
-### Usage Examples
-
-#### Get all books
-```bash
-curl http://localhost:5001/api/v1/books
-```
-
-#### Create a new book
-```bash
-curl -X POST http://localhost:5001/api/v1/books \
-  -H "Content-Type: application/json" \
-  -d '{
-    "title": "Don Quixote",
-    "author": "Miguel de Cervantes",
-    "description": "A classic novel",
-    "price": 29.99,
-    "stock": 10,
-    "seller_id": 1
-  }'
 ```
 
 ## Development

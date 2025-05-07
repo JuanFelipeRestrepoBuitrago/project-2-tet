@@ -1,12 +1,9 @@
-version: '3.8'
-
 services:
-  catalog:
-    build: .
+  flaskapp-microservice-catalog:
+    image: ghcr.io/juanfeliperestrepobuitrago/project-2-tet/catalog-microservice:latest
+    container_name: microservice-catalog
+    restart: always
+    env_file:
+      - .env
     ports:
-      - "5001:5001"
-    environment:
-      - FLASK_ENV=development
-      - DATABASE_URL=sqlite:///catalog.db
-    volumes:
-      - .:/app 
+      - "80:5000"

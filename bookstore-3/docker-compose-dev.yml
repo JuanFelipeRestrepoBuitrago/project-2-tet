@@ -2,45 +2,79 @@ version: '3.8'
 
 services:
   bookstore:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     ports:
-      - "5003:5000"
+      - "5000:5000"
     environment:
       - FLASK_ENV=development
-      - SECRET_KEY=your-secret-key-here
-      - WRITE_ENGINE=sqlite:///bookstore.db
-      - READER_ENGINE=sqlite:///bookstore.db
-      - CREATION_DB=sqlite:///bookstore.db
-      - AUTH_SERVICE_URL=http://auth-microservice:5002
-      - CATALOG_SERVICE_URL=http://catalog-microservice:5001
-    volumes:
-      - .:/app
+      - SECRET_KEY=secretkey
+      - WRITE_ENGINE=mysql+pymysql://bookstore_user:123@db/bookstore
+      - READER_ENGINE=mysql+pymysql://bookstore_user:123@db/bookstore
+      - CREATION_DB=mysql+pymysql://bookstore_user:123@db/bookstore
+      - AUTH_SERVICE_URL=http://auth-microservice:5000/auth
+      - CATALOG_SERVICE_URL=http://catalog-microservice:5000
     depends_on:
       - auth-microservice
       - catalog-microservice
+      - db
+    networks:
+      - bookstore_net
 
   auth-microservice:
-    build: ../auth-microservice
-    ports:
-      - "5002:5002"
+    build:
+      context: ../auth-microservice
+      dockerfile: Dockerfile
+    container_name: microservice-auth
+    restart: always
+    depends_on:
+      - db
     environment:
       - FLASK_ENV=development
-      - SECRET_KEY=your-secret-key-here
-      - WRITE_ENGINE=sqlite:///auth.db
-      - READER_ENGINE=sqlite:///auth.db
-      - CREATION_DB=sqlite:///auth.db
-    volumes:
-      - ../auth-microservice:/app
+      - WRITE_ENGINE=mysql+pymysql://bookstore_user:123@db/bookstore
+      - READER_ENGINE=mysql+pymysql://bookstore_user:123@db/bookstore
+      - SECRET_KEY=secretkey
+    ports:
+      - "5001:5000"
+    networks:
+      - bookstore_net
 
   catalog-microservice:
-    build: ../catalog-microservice
-    ports:
-      - "5001:5001"
+    build:
+      context: ../catalog-microservice
+      dockerfile: Dockerfile
+    container_name: microservice-catalog
+    restart: always
     environment:
       - FLASK_ENV=development
-      - SECRET_KEY=your-secret-key-here
-      - WRITE_ENGINE=sqlite:///catalog.db
-      - READER_ENGINE=sqlite:///catalog.db
-      - CREATION_DB=sqlite:///catalog.db
+      - WRITE_ENGINE=mysql+pymysql://bookstore_user:123@db/bookstore
+      - READER_ENGINE=mysql+pymysql://bookstore_user:123@db/bookstore
+      - SECRET_KEY=secretkey
+    ports:
+      - "5002:5000"
+    depends_on:
+      - db
+    networks:
+      - bookstore_net
+
+  db:
+    image: mysql:8.4.0
+    restart: always
+    environment:
+      MYSQL_DATABASE: bookstore
+      MYSQL_USER: bookstore_user
+      MYSQL_PASSWORD: 123
+      MYSQL_ROOT_PASSWORD: 123
+    ports:
+      - "3306:3306"
     volumes:
-      - ../catalog-microservice:/app 
+      - db_data:/var/lib/mysql
+    networks:
+      - bookstore_net
+
+volumes:
+  db_data:
+
+networks:
+  bookstore_net:

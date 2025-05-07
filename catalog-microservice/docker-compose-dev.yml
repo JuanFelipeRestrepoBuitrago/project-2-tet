@@ -1,14 +1,21 @@
-version: '3.8'
-
 services:
-  catalog:
-    build: .
-    ports:
-      - "5001:5001"
+  db:
+    image: mysql:8.4.0
+    restart: always
     environment:
-      - FLASK_ENV=development
-      - DATABASE_URL=sqlite:///catalog.db
-      - FLASK_DEBUG=1
+      MYSQL_DATABASE: bookstore
+      MYSQL_USER: bookstore_user
+      MYSQL_PASSWORD: 123
+      MYSQL_ROOT_PASSWORD: 123
+    ports:
+      - "3306:3306"
     volumes:
-      - .:/app
-    command: python -m flask run --host=0.0.0.0 --port=5001 
+      - db_data:/var/lib/mysql
+    networks:
+      - bookstore_net
+
+volumes:
+  db_data:
+
+networks:
+  bookstore_net:

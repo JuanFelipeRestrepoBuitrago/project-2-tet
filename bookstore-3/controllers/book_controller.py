@@ -27,7 +27,17 @@ def my_books():
     user = check_user_auth(session.get('token'))
     if not user:
         return redirect(url_for('auth.login'))
-    books = Book.query.filter_by(seller_id=user["id"]).all()
+
+    response = requests.post(
+        f'{current_app.config["CATALOG_SERVICE_URL"]}/catalog/my-books',
+        json={
+            'user_id': user['id']
+        }
+    )
+    if not response.ok:
+        flash('Error fetching your books. Please try again.', 'error')
+        return redirect(url_for('book.catalog'))
+    books = response.json()
     return render_template('my_books.html', books=books, my_user=user)
 
 # Add a new book
@@ -50,8 +60,7 @@ def add_book():
                 'price': float(request.form.get('price')),
                 'stock': int(request.form.get('stock')),
                 'seller_id': user['id']
-            },
-            headers={'Authorization': f'Bearer {session.get("token")}'}
+            }
         )
         if response.ok:
             return redirect(url_for('book.catalog'))
@@ -80,8 +89,7 @@ def edit_book(book_id):
                 'price': float(request.form.get('price')),
                 'stock': int(request.form.get('stock')),
                 'seller_id': user['id']
-            },
-            headers={'Authorization': f'Bearer {session.get("token")}'}
+            }
         )
         if response.ok:
             return redirect(url_for('book.catalog'))
@@ -108,8 +116,7 @@ def delete_book(book_id):
         return redirect(url_for('auth.login'))
 
     response = requests.delete(
-        f'{current_app.config["CATALOG_SERVICE_URL"]}/catalog/books/{book_id}',
-        headers={'Authorization': f'Bearer {session.get("token")}'}
+        f'{current_app.config["CATALOG_SERVICE_URL"]}/catalog/books/{book_id}'
     )
     
     if response.ok:
