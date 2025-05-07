@@ -1,99 +1,80 @@
 from flask import Blueprint, jsonify, request
 from models.book import Book
 from extensions import db
+from utils.auth import token_required
 
 book = Blueprint('book', __name__)
 
 @book.route('/books', methods=['GET'])
 def get_books():
+    """Get all books"""
     books = Book.query.all()
-    return jsonify([{
-        'id': book.id,
-        'title': book.title,
-        'author': book.author,
-        'description': book.description,
-        'price': book.price,
-        'stock': book.stock,
-        'seller_id': book.seller_id
-    } for book in books])
+    return jsonify([book.to_dict() for book in books])
 
 @book.route('/books/<int:book_id>', methods=['GET'])
 def get_book(book_id):
+    """Get a specific book"""
     book = Book.query.get_or_404(book_id)
-    return jsonify({
-        'id': book.id,
-        'title': book.title,
-        'author': book.author,
-        'description': book.description,
-        'price': book.price,
-        'stock': book.stock,
-        'seller_id': book.seller_id
-    })
+    return jsonify(book.to_dict())
 
 @book.route('/books', methods=['POST'])
-def create_book():
+@token_required
+def create_book(current_user):
+    """Create a new book"""
     data = request.get_json()
+    
     new_book = Book(
         title=data['title'],
         author=data['author'],
-        description=data.get('description'),
-        price=float(data['price']),
-        stock=int(data['stock']),
-        seller_id=data['seller_id']
+        description=data['description'],
+        price=data['price'],
+        stock=data['stock'],
+        seller_id=current_user['id']
     )
+    
     db.session.add(new_book)
     db.session.commit()
-    return jsonify({
-        'id': new_book.id,
-        'title': new_book.title,
-        'author': new_book.author,
-        'description': new_book.description,
-        'price': new_book.price,
-        'stock': new_book.stock,
-        'seller_id': new_book.seller_id
-    }), 201
+    
+    return jsonify(new_book.to_dict()), 201
 
 @book.route('/books/<int:book_id>', methods=['PUT'])
-def update_book(book_id):
+@token_required
+def update_book(current_user, book_id):
+    """Update a book"""
     book = Book.query.get_or_404(book_id)
+    
+    if book.seller_id != current_user['id']:
+        return jsonify({'error': 'Unauthorized'}), 403
+    
     data = request.get_json()
     
-    book.title = data.get('title', book.title)
-    book.author = data.get('author', book.author)
-    book.description = data.get('description', book.description)
-    book.price = float(data.get('price', book.price))
-    book.stock = int(data.get('stock', book.stock))
-    book.seller_id = data.get('seller_id', book.seller_id)
+    book.title = data['title']
+    book.author = data['author']
+    book.description = data['description']
+    book.price = data['price']
+    book.stock = data['stock']
     
     db.session.commit()
-    return jsonify({
-        'id': book.id,
-        'title': book.title,
-        'author': book.author,
-        'description': book.description,
-        'price': book.price,
-        'stock': book.stock,
-        'seller_id': book.seller_id
-    })
+    
+    return jsonify(book.to_dict())
 
 @book.route('/books/<int:book_id>', methods=['DELETE'])
-def delete_book(book_id):
+@token_required
+def delete_book(current_user, book_id):
+    """Delete a book"""
     book = Book.query.get_or_404(book_id)
+    
+    if book.seller_id != current_user['id']:
+        return jsonify({'error': 'Unauthorized'}), 403
+    
     db.session.delete(book)
     db.session.commit()
+    
     return '', 204
 
-@book.route('/my-books', methods=['POST'])
-def get_my_books():
+@book.route('/my-books', methods=['GET'])
+@token_required
+def get_my_books(current_user):
     """Get books created by the current user"""
-    data = request.get_json()
-    books = Book.query.filter_by(seller_id=data["user_id"]).all()
-    return jsonify([{
-        'id': book.id,
-        'title': book.title,
-        'author': book.author,
-        'description': book.description,
-        'price': book.price,
-        'stock': book.stock,
-        'seller_id': book.seller_id
-    } for book in books])
+    books = Book.query.filter_by(seller_id=current_user['id']).all()
+    return jsonify([book.to_dict() for book in books]) 
