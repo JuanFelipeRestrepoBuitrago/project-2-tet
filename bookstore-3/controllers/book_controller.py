@@ -14,7 +14,7 @@ def catalog():
     Display all available books in the public catalog.
     """
     user = check_user_auth(session.get('token'))
-    response = requests.get(f'{current_app.config["CATALOG_SERVICE_URL"]}/api/v1/books')
+    response = requests.get(f'{current_app.config["CATALOG_SERVICE_URL"]}/catalog/books')
     books = response.json() if response.ok else []
     return render_template('catalog.html', books=books, my_user=user)
 
@@ -42,7 +42,7 @@ def add_book():
     
     if request.method == 'POST':
         response = requests.post(
-            f'{current_app.config["CATALOG_SERVICE_URL"]}/api/v1/books',
+            f'{current_app.config["CATALOG_SERVICE_URL"]}/catalog/books',
             json={
                 'title': request.form.get('title'),
                 'author': request.form.get('author'),
@@ -72,7 +72,7 @@ def edit_book(book_id):
 
     if request.method == 'POST':
         response = requests.put(
-            f'{current_app.config["CATALOG_SERVICE_URL"]}/api/v1/books/{book_id}',
+            f'{current_app.config["CATALOG_SERVICE_URL"]}/catalog/books/{book_id}',
             json={
                 'title': request.form.get('title'),
                 'author': request.form.get('author'),
@@ -89,7 +89,7 @@ def edit_book(book_id):
             flash('Error updating book. Please try again.', 'error')
 
     # Get book details
-    response = requests.get(f'{current_app.config["CATALOG_SERVICE_URL"]}/api/v1/books/{book_id}')
+    response = requests.get(f'{current_app.config["CATALOG_SERVICE_URL"]}/catalog/books/{book_id}')
     if not response.ok:
         flash('Book not found.', 'error')
         return redirect(url_for('book.catalog'))
@@ -108,7 +108,7 @@ def delete_book(book_id):
         return redirect(url_for('auth.login'))
 
     response = requests.delete(
-        f'{current_app.config["CATALOG_SERVICE_URL"]}/api/v1/books/{book_id}',
+        f'{current_app.config["CATALOG_SERVICE_URL"]}/catalog/books/{book_id}',
         headers={'Authorization': f'Bearer {session.get("token")}'}
     )
     

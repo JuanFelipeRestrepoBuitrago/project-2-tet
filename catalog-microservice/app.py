@@ -2,8 +2,9 @@ from flask import Flask
 from extensions import db, ma
 from config import config
 import os
+from controllers.book_controller import book
 
-def create_app(config_name=None):
+def create_app(config_name='default'):
     if config_name is None:
         config_name = os.getenv('FLASK_ENV', 'default')
 
@@ -15,8 +16,7 @@ def create_app(config_name=None):
     ma.init_app(app)
     
     # Register blueprints
-    from controllers.book_controller import book
-    app.register_blueprint(book, url_prefix='/api/v1')
+    app.register_blueprint(book, url_prefix='/catalog')
     
     # Create database tables
     with app.app_context():

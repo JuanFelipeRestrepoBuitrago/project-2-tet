@@ -24,10 +24,10 @@ def login():
             session['token'] = data['token']
             print(f"User {data['user']['name']} logged in successfully.")
             return redirect(url_for('book.catalog'))
-        flash('Login failed. Please check your credentials.', 'error')
+        else:
+            flash('Login failed. Please check your credentials.', 'error')
 
     return render_template('login.html', my_user=None)
-
 
 @auth.route('/register', methods=['GET', 'POST'])
 def register():
@@ -46,12 +46,12 @@ def register():
             'password': password
         })
         if response.ok:
+            flash('Registration successful! Please login.', 'success')
             return redirect(url_for('auth.login'))
         else:
             flash(response.json()['error'], 'error')
 
     return render_template('register.html', my_user=None)
-
 
 @auth.route('/logout')
 def logout():
