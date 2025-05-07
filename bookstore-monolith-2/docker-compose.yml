@@ -1,9 +1,16 @@
 services:
   flaskapp:
-    image: ghcr.io/juanfeliperestrepobuitrago/project-2-tet/bookstore-monolith:v2.0.0
+    build: .
+    # mala mia se me olvido como hacer tags
+    # image: ghcr.io/juanfeliperestrepobuitrago/project-2-tet/bookstore-monolith:v2.0.0
     container_name: bookstore-monolith-objetive2
     restart: always
     env_file:
       - .env
     ports:
       - "80:5000"
+    volumes:
+      - type: bind
+        source: /home/ubuntu/nfs-mount
+        target: /nfs
+        read_only: false
