@@ -1,0 +1,82 @@
+version: '3.8'
+
+services:
+  auth-microservice:
+    build:
+      context: ../auth-microservice
+      dockerfile: Dockerfile
+    container_name: microservice-auth
+    restart: always
+    depends_on:
+      - db
+    environment:
+      - FLASK_ENV=development
+      - WRITE_ENGINE=mysql+pymysql://bookstore_user:123@db/bookstore
+      - READER_ENGINE=mysql+pymysql://bookstore_user:123@db/bookstore
+      - SECRET_KEY=secretkey
+    ports:
+      - "5001:5000"
+    networks:
+      - bookstore_net
+
+  catalog-microservice:
+    build:
+      context: ../catalog-microservice
+      dockerfile: Dockerfile
+    container_name: microservice-catalog
+    restart: always
+    environment:
+      - FLASK_ENV=development
+      - WRITE_ENGINE=mysql+pymysql://bookstore_user:123@db/bookstore
+      - READER_ENGINE=mysql+pymysql://bookstore_user:123@db/bookstore
+      - SECRET_KEY=secretkey
+    ports:
+      - "5002:5000"
+    depends_on:
+      - db
+    networks:
+      - bookstore_net
+
+  db:
+    image: mysql:8.4.0
+    container_name: bookstore_db
+    restart: always
+    environment:
+      MYSQL_DATABASE: bookstore
+      MYSQL_USER: bookstore_user
+      MYSQL_PASSWORD: 123
+      MYSQL_ROOT_PASSWORD: 123
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - bookstore_net
+
+  bookstore:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: bookstore
+    depends_on:
+      - db
+      - auth-microservice
+      - catalog-microservice
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=development
+      - SECRET_KEY=secretkey
+      - WRITE_ENGINE=mysql+pymysql://bookstore_user:123@db/bookstore
+      - READER_ENGINE=mysql+pymysql://bookstore_user:123@db/bookstore
+      - CREATION_DB=mysql+pymysql://bookstore_user:123@db/bookstore
+      - AUTH_SERVICE_URL=http://auth-microservice:5000/auth
+      - CATALOG_SERVICE_URL=http://catalog-microservice:5000
+    networks:
+      - bookstore_net
+
+volumes:
+  db_data:
+
+networks:
+  bookstore_net:

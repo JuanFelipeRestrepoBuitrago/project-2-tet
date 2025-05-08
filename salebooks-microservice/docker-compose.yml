@@ -1,0 +1,9 @@
+services:
+  flaskapp:
+    image: ghcr.io/juanfeliperestrepobuitrago/project-2-tet/bookstore-monolith:latest
+    container_name: bookstore-objetive3
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "80:5000"
