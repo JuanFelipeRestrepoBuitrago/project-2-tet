@@ -1,4 +1,4 @@
-from app import app
+from app import create_app
 from extensions import db
 from models.user import User
 from models.book import Book
@@ -16,6 +16,7 @@ def setup_database():
         connection.execute(text("CREATE DATABASE IF NOT EXISTS bookstore CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"))
         connection.commit()
 
+    app = create_app()
     app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('WRITE_ENGINE')
     
     with app.app_context():

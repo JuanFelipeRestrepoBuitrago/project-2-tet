@@ -1,5 +1,5 @@
 import os
-from flask import Flask, render_template
+from flask import Flask, render_template, send_from_directory
 from extensions import db, login_manager
 from models.user import User
 from config import config
@@ -19,6 +19,14 @@ def create_app(config_name=None):
     @login_manager.user_loader
     def load_user(user_id):
         return User.query.get(int(user_id))
+    
+    @app.route('/favicon.ico')
+    def favicon():
+        return send_from_directory(
+            '/nfs',
+            'favicon.ico',
+            mimetype='image/vnd.microsoft.icon'
+        )
     
     # Registrar Blueprints
     from controllers.auth_controller import auth
