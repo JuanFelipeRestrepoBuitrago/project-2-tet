@@ -34,6 +34,7 @@ services:
       - "5002:5000"
     depends_on:
       - db
+      - auth-microservice
     networks:
       - bookstore_net
 
