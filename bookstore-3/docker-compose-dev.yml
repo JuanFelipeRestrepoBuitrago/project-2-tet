@@ -37,6 +37,24 @@ services:
     networks:
       - bookstore_net
 
+  purchase-microservice:
+    build:
+      context: ../purchase-microservice
+      dockerfile: Dockerfile
+    container_name: microservice-purchase
+    restart: always
+    environment:
+      - FLASK_ENV=development
+      - WRITE_ENGINE=mysql+pymysql://bookstore_user:123@db/bookstore
+      - READER_ENGINE=mysql+pymysql://bookstore_user:123@db/bookstore
+      - SECRET_KEY=secretkey
+    ports:
+      - "5003:5000"
+    depends_on:
+      - db
+    networks:
+      - bookstore_net
+
   db:
     image: mysql:8.4.0
     container_name: bookstore_db
@@ -59,9 +77,9 @@ services:
       dockerfile: Dockerfile
     container_name: bookstore
     depends_on:
-      - db
       - auth-microservice
       - catalog-microservice
+      - purchase-microservice
     ports:
       - "5000:5000"
     environment:
@@ -72,6 +90,7 @@ services:
       - CREATION_DB=mysql+pymysql://bookstore_user:123@db/bookstore
       - AUTH_SERVICE_URL=http://auth-microservice:5000/auth
       - CATALOG_SERVICE_URL=http://catalog-microservice:5000
+      - PURCHASE_SERVICE_URL=http://purchase-microservice:5000/purchase
     networks:
       - bookstore_net
 

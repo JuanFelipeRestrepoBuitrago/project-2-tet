@@ -1,7 +1,6 @@
 flask
 flask_sqlalchemy
 pymysql
-werkzeug
-cryptography
-PyJWT
+requests
 tenacity
+cryptography
