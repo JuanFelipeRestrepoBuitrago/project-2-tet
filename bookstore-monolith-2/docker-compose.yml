@@ -10,4 +10,4 @@ services:
     ports:
       - "80:5000"
     volumes:
-      - /home/ubuntu/nfs-mount:/nfs
+      - /home/ubuntu/nfs-mount:/app/static
