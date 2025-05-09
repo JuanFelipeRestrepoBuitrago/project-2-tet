@@ -1,7 +1,7 @@
 services:
   flaskapp:
     build: .
-    # mala mia se me olvido como hacer tags
+    # mala mia se me olvido como hacer ta
     # image: ghcr.io/juanfeliperestrepobuitrago/project-2-tet/bookstore-monolith:v2.0.0
     container_name: bookstore-monolith-objetive2
     restart: always
@@ -10,7 +10,4 @@ services:
     ports:
       - "80:5000"
     volumes:
-      - type: bind
-        source: /home/ubuntu/nfs-mount
-        target: /nfs
-        read_only: false
+      - /home/ubuntu/nfs-mount:/nfs
