@@ -1,5 +1,2 @@
 flask
-flask_sqlalchemy
-pymysql
 requests
-tenacity

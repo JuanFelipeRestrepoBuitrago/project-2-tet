@@ -1,9 +1,6 @@
-from flask import Blueprint, render_template, request, redirect, url_for, session
+from flask import Blueprint, render_template, request, redirect, url_for, session, current_app, flash
 from utils.utils import check_user_auth
-
-from models.payment import Payment
-from models.purchase import Purchase
-from extensions import db
+import requests
 
 payment = Blueprint('payment', __name__)
 
@@ -19,21 +16,19 @@ def payment_page(purchase_id):
     if request.method == 'POST':
         method = request.form.get('method')
         amount = request.form.get('amount')
-
-        # Create payment record
-        new_payment = Payment(
-            purchase_id=purchase_id,
-            amount=amount,
-            payment_method=method,
-            payment_status='Paid'
+        
+        response = requests.post(
+            f'{current_app.config["PURCHASE_SERVICE_URL"]}/payment',
+            json={
+                'purchase_id': purchase_id,
+                'amount': amount,
+                'method': method
+            }
         )
-        db.session.add(new_payment)
 
-        # Update purchase status
-        purchase = Purchase.query.get(purchase_id)
-        purchase.status = 'Paid'
-
-        db.session.commit()
+        if not response.ok:
+            flash('Error processing payment' + str(response.json()), 'error')
+            return redirect(url_for('book.catalog'))
 
         return redirect(url_for('delivery.select_delivery', purchase_id=purchase_id))
 

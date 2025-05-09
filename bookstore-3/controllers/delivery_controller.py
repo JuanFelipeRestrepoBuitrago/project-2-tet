@@ -1,9 +1,6 @@
-from flask import Blueprint, render_template, request, redirect, url_for, session
+from flask import Blueprint, render_template, request, redirect, url_for, session, current_app, flash
 from utils.utils import check_user_auth
-
-from models.delivery import DeliveryProvider
-from models.delivery_assignment import DeliveryAssignment
-from extensions import db
+import requests
 
 delivery = Blueprint('delivery', __name__)
 
@@ -15,18 +12,28 @@ def select_delivery(purchase_id):
     user = check_user_auth(session.get('token'))
     if not user:
         return redirect(url_for('auth.login'))
-    providers = DeliveryProvider.query.all()
-
+    response = requests.get(
+        f'{current_app.config["PURCHASE_SERVICE_URL"]}/delivery/providers',
+    )
+    if not response.ok:
+        flash('Error fetching delivery providers' + str(response.json()), 'error')
+        return redirect(url_for('book.catalog'))
+    providers = response.json()
+    
     if request.method == 'POST':
         selected_provider_id = request.form.get('provider')
-
-        assignment = DeliveryAssignment(
-            purchase_id=purchase_id,
-            provider_id=selected_provider_id
+        
+        response = requests.post(
+            f'{current_app.config["PURCHASE_SERVICE_URL"]}/delivery/assignment',
+            json={
+                'purchase_id': purchase_id,
+                'selected_provider_id': selected_provider_id
+            }
         )
-
-        db.session.add(assignment)
-        db.session.commit()
+        
+        if not response.ok:
+            flash('Error assigning delivery provider' + str(response.json()), 'error')
+            return redirect(url_for('book.catalog'))
 
         return redirect(url_for('book.catalog'))
 

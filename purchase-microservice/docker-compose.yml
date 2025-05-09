@@ -1,0 +1,9 @@
+services:
+  flaskapp-microservice-purchase:
+    image: ghcr.io/juanfeliperestrepobuitrago/project-2-tet/purchase-microservice:latest
+    container_name: microservice-purchase
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "80:5000"
