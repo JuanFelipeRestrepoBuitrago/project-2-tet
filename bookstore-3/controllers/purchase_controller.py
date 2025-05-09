@@ -1,9 +1,6 @@
-from flask import Blueprint, request, redirect, url_for, session
+from flask import Blueprint, request, redirect, url_for, session, current_app, flash
+import requests
 from utils.utils import check_user_auth
-
-from models.purchase import Purchase
-from models.book import Book
-from extensions import db
 
 purchase = Blueprint('purchase', __name__)
 
@@ -18,27 +15,21 @@ def buy(book_id):
         return redirect(url_for('auth.login'))
     quantity = int(request.form.get('quantity'))
     price = float(request.form.get('price'))
-
-    book = Book.query.get_or_404(book_id)
-
-    if book.stock < quantity:
-        return "No hay suficiente stock disponible.", 400
-
-    total_price = price * quantity
-
-    # Create purchase
-    new_purchase = Purchase(
-        user_id=user["id"],
-        book_id=book_id,
-        quantity=quantity,
-        total_price=total_price,
-        status='Pending Payment'
+    
+    response = requests.post(
+        f'{current_app.config["PURCHASE_SERVICE_URL"]}/buy',
+        json={
+            'book_id': book_id,
+            'quantity': quantity,
+            'price': price,
+            'user_id': user['id']
+        }
     )
 
-    # Update stock
-    book.stock -= quantity
+    if not response.ok:
+        flash('Error processing purchase' + str(response.json()), 'error')
+        return redirect(url_for('book.catalog'))
+    
+    data = response.json()
 
-    db.session.add(new_purchase)
-    db.session.commit()
-
-    return redirect(url_for('payment.payment_page', purchase_id=new_purchase.id))
+    return redirect(url_for('payment.payment_page', purchase_id=data['purchase_id']))

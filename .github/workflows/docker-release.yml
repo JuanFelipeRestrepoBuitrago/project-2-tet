@@ -74,3 +74,14 @@ jobs:
           tags: |
             ghcr.io/juanfeliperestrepobuitrago/project-2-tet/catalog-microservice:${{ env.TAG }}
             ghcr.io/juanfeliperestrepobuitrago/project-2-tet/catalog-microservice:latest
+
+      - name: Build and Push Purchase Microservice Image to GHRC
+        uses: docker/build-push-action@v5
+        with:
+          context: ./purchase-microservice
+          platforms: linux/amd64,linux/arm64
+          push: true
+          provenance: false 
+          tags: |
+            ghcr.io/juanfeliperestrepobuitrago/project-2-tet/purchase-microservice:${{ env.TAG }}
+            ghcr.io/juanfeliperestrepobuitrago/project-2-tet/purchase-microservice:latest
