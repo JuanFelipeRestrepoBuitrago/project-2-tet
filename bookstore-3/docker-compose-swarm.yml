@@ -1,0 +1,120 @@
+version: "3.8"
+
+services:
+  auth-microservice:
+    build:
+      context: ../auth-microservice
+      dockerfile: Dockerfile
+    image: auth-microservice:latest
+    environment:
+      - FLASK_ENV=development
+      - WRITE_ENGINE=mysql+pymysql://bookstore_user:123@db/bookstore
+      - READER_ENGINE=mysql+pymysql://bookstore_user:123@db/bookstore
+      - SECRET_KEY=secretkey
+    ports:
+      - "5001:5000"
+    depends_on:
+      - db
+    networks:
+      - bookstore_net
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+
+  catalog-microservice:
+    build:
+      context: ../catalog-microservice
+      dockerfile: Dockerfile
+    image: catalog-microservice:latest
+    environment:
+      - FLASK_ENV=development
+      - WRITE_ENGINE=mysql+pymysql://bookstore_user:123@db/bookstore
+      - READER_ENGINE=mysql+pymysql://bookstore_user:123@db/bookstore
+      - SECRET_KEY=secretkey
+    ports:
+      - "5002:5000"
+    depends_on:
+      - db
+    networks:
+      - bookstore_net
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+
+  purchase-microservice:
+    build:
+      context: ../purchase-microservice
+      dockerfile: Dockerfile
+    image: purchase-microservice:latest
+    environment:
+      - FLASK_ENV=development
+      - WRITE_ENGINE=mysql+pymysql://bookstore_user:123@db/bookstore
+      - READER_ENGINE=mysql+pymysql://bookstore_user:123@db/bookstore
+      - SECRET_KEY=secretkey
+    ports:
+      - "5003:5000"
+    depends_on:
+      - db
+    networks:
+      - bookstore_net
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+
+  db:
+    image: mysql:8.0
+    environment:
+      - MYSQL_ROOT_PASSWORD=123
+      - MYSQL_DATABASE=bookstore
+      - MYSQL_USER=bookstore_user
+      - MYSQL_PASSWORD=123
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      bookstore_net:
+        aliases:
+          - db
+    deploy:
+      placement:
+        constraints: [node.role == manager]
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+  bookstore:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: bookstore-monolith:latest
+    environment:
+      - FLASK_ENV=development
+      - SECRET_KEY=secretkey
+      - WRITE_ENGINE=mysql+pymysql://bookstore_user:123@db/bookstore
+      - READER_ENGINE=mysql+pymysql://bookstore_user:123@db/bookstore
+      - CREATION_DB=mysql+pymysql://bookstore_user:123@db/bookstore
+      - AUTH_SERVICE_URL=http://auth-microservice:5000/auth
+      - CATALOG_SERVICE_URL=http://catalog-microservice:5000
+      - PURCHASE_SERVICE_URL=http://purchase-microservice:5000/purchase
+    ports:
+      - "5000:5000"
+    depends_on:
+      - auth-microservice
+      - catalog-microservice
+      - purchase-microservice
+      - db
+    networks:
+      - bookstore_net
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+
+networks:
+  bookstore_net:
+    driver: overlay
+
+volumes:
+  db_data:
