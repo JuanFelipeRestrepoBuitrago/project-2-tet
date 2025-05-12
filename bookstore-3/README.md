@@ -7,7 +7,10 @@ Re-engineer the BookStore Monolitica app, to be divided into 3 coordinating micr
 ## Objective Completion Features
 
 - [x] Completed
-- **Domain**: [objective3.p2tet.duckdns.org](https://objective2.p2tet.duckdns.org) is the domain which points to the Monolithic application with autoscaling.
+- **Domain**: [objective3.p2tet.duckdns.org](https://objective3.p2tet.duckdns.org) is the domain which points to the Monolithic application with autoscaling.
+- **Microservices**: we integrated the 3 microservices which were asked for in the objective.
+- **Swarm**: we used Docker Swarm to deploy the application in a cluster of 3 nodes.
+- **NFS**: we used NFS to share the favicon of the page between the 3 nodes and the objective 2.
 
 ## Table of Contents
 - [Objective 3](#objective-3)
@@ -19,12 +22,15 @@ Re-engineer the BookStore Monolitica app, to be divided into 3 coordinating micr
 - [Database configuration](#database-configuration)
 - [Load Balancer configuration](#load-balancer-configuration)
 - [Autoscaling configuration](#autoscaling-configuration)
+- [Set up Development](#set-up-development)
+    - [Execution](#execution)
 - [Set up Deployment](#set-up-deployment)
-  - [Template VM](#template-vm)
-  - [Installing Docker and Docker Compose](#installing-docker-and-docker-compose)
-  - [Domain](#domain-1)
-  - [Deploying the Application](#deploying-the-application)
-
+    - [Deploy 3 EC2 instances](#deploy-3-ec2-instances)
+    - [Installing Docker and Docker Compose in all instances](#installing-docker-and-docker-compose-in-all-instances)
+    - [Domain](#domain-1)
+    - [NFS](#nfs)
+    - [Swarm](#swarm)
+    - [Deploying the Application in the First Instance](#deploying-the-application-in-the-first-instance)
 
 # Bookstore 3 with Microservices
 The authentication microservice is responsible for managing user authentication and authorization. It provides endpoints for user registration, login, and logout. The microservice uses JWT (JSON Web Tokens) for secure token-based authentication.
@@ -138,9 +144,9 @@ python app.py
 ## Set up Deployment
 
 
-### Template VM
+### Deploy 3 EC2 instances
 
-We need a template of the application in a VM to be able to create new instances of the application, this template will be used to create the AMI that will be used in the auto-scaling policy.
+To deploy the application on AWS, you need to set up three EC2 instances. Follow these steps:
 
 1. Create an AWS account and log in to the AWS Management Console.
 2. Navigate to the EC2 Dashboard and launch a new instance.
@@ -150,7 +156,7 @@ We need a template of the application in a VM to be able to create new instances
 6. Create a new key pair or use an existing one to access the instance.
 7. Launch the instance and wait for it to be in the "running" state.
 
-### Installing Docker and Docker Compose
+### Installing Docker and Docker Compose in all instances
 
 1. Update the package list and install dependencies:
 ```bash
@@ -188,7 +194,34 @@ docker compose --version
 ### Domain
 Continue with the SSL certificate, domain and inverse proxy setup at [Reverse Proxy](../reverse-proxy/README.md)
 
-### Deploying the Application
+### NFS
+
+1. Install NFS server on the EC2 instances:
+```bash
+sudo apt update && sudo apt install -y nfs-common
+```
+2. Create a directory to mount the NFS share:
+```bash
+sudo mkdir -p ~/nfs-mount && sudo mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport YOUR_URL:/ ~/nfs-mount
+```
+3. Verify the NFS share is mounted:
+```bash
+df -h
+```
+
+### Swarm
+
+1. Initialize Docker Swarm on the first instance:
+```bash
+docker swarm init
+```
+
+2. Join the other instances to the swarm:
+```bash
+docker swarm join --token YOUR_TOKEN YOUR_MANAGER_IP:2377
+```
+
+### Deploying the Application in the First Instance
 1. Clone the repository:
 ```bash
 git clone https://github.com/JuanFelipeRestrepoBuitrago/project-2-tet.git
@@ -207,5 +240,5 @@ AUTH_SERVICE_URL=http://YOUR_URL:YOUR_PORT/auth
 
 3. Run the application:
 ```bash
-docker compose up -d
+docker stack deploy -c docker-compose.yml bookstore
 ```

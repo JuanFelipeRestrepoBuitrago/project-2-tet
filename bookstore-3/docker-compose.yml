@@ -63,3 +63,5 @@ services:
 
 networks:
   bookstore_net:
+    driver: overlay
+    attachable: true
