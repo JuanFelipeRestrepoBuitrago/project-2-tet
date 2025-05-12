@@ -2,9 +2,10 @@ services:
   auth-microservice:
     image: ghcr.io/juanfeliperestrepobuitrago/project-2-tet/auth-microservice:latest
     container_name: microservice-auth
-    restart: always
-    depends_on:
-      - db
+    deploy:
+      replicas: 3
+      restart_policy:
+        condition: on-failure
     env_file:
       - .env
     ports:
@@ -15,20 +16,24 @@ services:
   catalog-microservice:
     image: ghcr.io/juanfeliperestrepobuitrago/project-2-tet/catalog-microservice:latest
     container_name: microservice-catalog
-    restart: always
+    deploy:
+      replicas: 3
+      restart_policy:
+        condition: on-failure
     env_file:
       - .env
     ports:
       - "5002:5000"
-    depends_on:
-      - db
     networks:
       - bookstore_net
 
   purchase-microservice:
     image: ghcr.io/juanfeliperestrepobuitrago/project-2-tet/purchase-microservice:latest
     container_name: microservice-purchase
-    restart: always
+    deploy:
+      replicas: 3
+      restart_policy:
+        condition: on-failure
     env_file:
       - .env
     ports:
@@ -39,6 +44,10 @@ services:
   bookstore:
     image: ghcr.io/juanfeliperestrepobuitrago/project-2-tet/bookstore-monolith:latest
     container_name: bookstore
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
     depends_on:
       - auth-microservice
       - catalog-microservice
@@ -49,9 +58,6 @@ services:
       - .env
     networks:
       - bookstore_net
-
-volumes:
-  db_data:
 
 networks:
   bookstore_net:
