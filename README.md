@@ -71,3 +71,21 @@ Re-engineer the BookStore Monolitica app, to be divided into 3 coordinating micr
 - **Swarm**: we used Docker Swarm to deploy the application in a cluster of 3 nodes.
 - **NFS**: we used NFS to share the favicon of the page between the 3 nodes and the objective 2.
 
+## Architectural Diagram
+- **A**: Browser
+- **B**: Nginx Proxy Reverso
+- **C**: App Monolítica Objetivo 1
+- **D**: Load Balancer Objetivo 2
+- **E**: Load Balancer Swarm (IP Nodo Master)
+- **F**: Instancias Autoescaladas por AWS
+- **G**: Contenedores en 3 Instancias AWS (incluye Master)
+```mermaid
+graph LR
+    A --> B
+    B --> C
+    B --> D
+    B --> E
+    D --> F
+    E --> G
+```
+
