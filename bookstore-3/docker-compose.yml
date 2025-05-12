@@ -56,6 +56,8 @@ services:
       - "80:5000"
     env_file:
       - .env
+    volumes:
+      - /home/ubuntu/nfs-mount:/app/static
     networks:
       - bookstore_net
 
