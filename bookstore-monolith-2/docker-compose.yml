@@ -1,8 +1,6 @@
 services:
   flaskapp:
-    build: .
-    # mala mia se me olvido como hacer ta
-    # image: ghcr.io/juanfeliperestrepobuitrago/project-2-tet/bookstore-monolith:v2.0.0
+    image: ghcr.io/juanfeliperestrepobuitrago/project-2-tet/bookstore-monolith:v2.1.0
     container_name: bookstore-monolith-objetive2
     restart: always
     env_file:
