@@ -47,6 +47,7 @@ Cloud deployment of the monolithic application using **EC2 autoscaling**, **load
 - 🔄 **Extension of Objective 1**: Builds upon the previous setup, adding new infrastructure.
 - 🗃️ **Highly Available Database**: Implemented using **Amazon Aurora and RDS**, allowing distributed access.
 - ⚖️ **Load Balancer**: Distributes traffic among multiple app instances connected to a remote DB.
+- :scroll: **NFS:** A Network File System is used among the members of the auto-scaling group to share static content.
 - 📈 **AWS Autoscaling**:
   - AMI-based scaling policy.
   - Minimum: 1 instance.
