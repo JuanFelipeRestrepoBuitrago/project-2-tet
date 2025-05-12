@@ -1,5 +1,5 @@
 import os
-from flask import Flask, render_template, session
+from flask import Flask, render_template, session, send_from_directory
 from config import config
 from utils.utils import check_user_auth
 
@@ -10,6 +10,14 @@ def create_app(config_name=None):
         
     app = Flask(__name__)
     app.config.from_object(config[config_name])
+    
+    @app.route('/favicon.ico')
+    def favicon():
+        return send_from_directory(
+            'static',
+            'favicon.ico',
+            mimetype='image/vnd.microsoft.icon'
+        )
     
     # Registrar Blueprints
     from controllers.auth_controller import auth

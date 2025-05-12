@@ -23,7 +23,7 @@ def create_app(config_name=None):
     @app.route('/favicon.ico')
     def favicon():
         return send_from_directory(
-            '/nfs',
+            'static',
             'favicon.ico',
             mimetype='image/vnd.microsoft.icon'
         )

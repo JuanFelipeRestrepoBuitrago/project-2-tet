@@ -19,6 +19,7 @@ Cloud scaling of a monolithic application, scaled on EC2 virtual machines on dem
     - [Prerequisites](#prerequisites)
     - [Code changes](#code-changes)
 - [Database configuration](#database-configuration)
+- [NFS configuration](#nfs-configuration)
 - [Load Balancer configuration](#load-balancer-configuration)
 - [Autoscaling configuration](#autoscaling-configuration)
 - [Set up Deployment](#set-up-deployment)
@@ -124,6 +125,21 @@ def create_routing_session(write_engine_url, read_engine_url):
     return RoutingSession(write_session_factory, read_session_factory)
 ```
 
+## NFS Configuration
+1. Create the directory where the NFS will be mounted for example.
+```bash
+mkdir -p /home/ubuntu/nfs-mount
+```
+2. Mount the NFS file system to that directory.
+```bash
+sudo mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport fs-00637b010660de0c0.efs.us-east-1.amazonaws.com:/ /home/ubuntu/nfs-mount
+```
+
+3. Add the volumen to the docker-compose.yaml.
+```bash
+volumes:
+      - /home/ubuntu/nfs-mount:/app/static
+```
 ## Database configuration
 The characteristics provided by the database we created in AWS are:
 
@@ -280,3 +296,11 @@ docker compose up -d
    - Choose "Create a new scaling policy."
    - Leave the default settings for the scaling policy. If half of the CPU is used for 300 seconds, a new instance will be created.
 9. Continue without changing the rest of the settings.
+
+### Create NFS
+
+1. Go to the EFS Dashboard.
+2. Click on "Create file system."
+3. Select the VPC where the EC2 instances that will use the NFS are located.
+4. Click on "Attach."
+5. Copy the mount command for the NFS client.

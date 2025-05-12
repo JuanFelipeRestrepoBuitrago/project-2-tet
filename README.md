@@ -17,6 +17,8 @@ We must deploy this application in different ways to complete three objectives:
   - [Completion Features](#completion-features-for-objective-1)
 - [Objective 2: Autoscaling Deployment](#objective-2-autoscaling-deployment)
   - [Completion Features](#completion-features-for-objective-2)
+- [Objective 3: Microservices Deployment](#objective-3-microservices-deployment)
+  - [Completion Features](#objective-completion-features)
 
 ---
 
@@ -47,9 +49,25 @@ Cloud deployment of the monolithic application using **EC2 autoscaling**, **load
 - 🔄 **Extension of Objective 1**: Builds upon the previous setup, adding new infrastructure.
 - 🗃️ **Highly Available Database**: Implemented using **Amazon Aurora and RDS**, allowing distributed access.
 - ⚖️ **Load Balancer**: Distributes traffic among multiple app instances connected to a remote DB.
+- :scroll: **NFS:** A Network File System is used among the members of the auto-scaling group to share static content.
 - 📈 **AWS Autoscaling**:
   - AMI-based scaling policy.
   - Minimum: 1 instance.
   - Maximum: 6 instances.
   - Desired capacity: 2 instances (scales based on demand).
 - 🌐 **Domain**: [objective2.p2tet.duckdns.org](https://objective2.p2tet.duckdns.org) points to the Monolithic application with autoscaling.
+
+## Objective 3
+Re-engineer the BookStore Monolitica app, to be divided into 3 coordinating microservices:
+- Microservice 1: Authentication: will manage register, login, logout.
+- Microservice 2: Catalog: will allow to visualize the offer of books on the platform.
+- Microservice 3: Purchase, Payment and Delivery of books sold on the platform.
+
+### Objective Completion Features
+
+- [x] Completed
+- **Domain**: [objective3.p2tet.duckdns.org](https://objective3.p2tet.duckdns.org) is the domain which points to the Monolithic application with autoscaling.
+- **Microservices**: we integrated the 3 microservices which were asked for in the objective.
+- **Swarm**: we used Docker Swarm to deploy the application in a cluster of 3 nodes.
+- **NFS**: we used NFS to share the favicon of the page between the 3 nodes and the objective 2.
+
