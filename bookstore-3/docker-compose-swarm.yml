@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   auth-microservice:
-    image: "${AUTH_IMAGE}"
+    image: ${AUTH_IMAGE}
     env_file:
       - .env
     environment:
@@ -23,7 +23,7 @@ services:
         condition: on-failure
 
   catalog-microservice:
-    image: "${CATALOG_IMAGE}"
+    image: ${CATALOG_IMAGE}
     env_file:
       - .env
     environment:
@@ -44,7 +44,7 @@ services:
         condition: on-failure
 
   purchase-microservice:
-    image: "${PURCHASE_IMAGE}"
+    image: ${PURCHASE_IMAGE}
     env_file:
       - .env
     environment:
@@ -65,7 +65,7 @@ services:
         condition: on-failure
 
   bookstore:
-    image: "${BOOKSTORE_IMAGE}"
+    image: ${BOOKSTORE_IMAGE}
     env_file:
       - .env
     environment:
