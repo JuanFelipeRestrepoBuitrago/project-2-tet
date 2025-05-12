@@ -2,119 +2,98 @@ version: "3.8"
 
 services:
   auth-microservice:
-    build:
-      context: ../auth-microservice
-      dockerfile: Dockerfile
-    image: auth-microservice:latest
+    image: "${AUTH_IMAGE}"
+    env_file:
+      - .env
     environment:
-      - FLASK_ENV=development
-      - WRITE_ENGINE=mysql+pymysql://bookstore_user:123@db/bookstore
-      - READER_ENGINE=mysql+pymysql://bookstore_user:123@db/bookstore
-      - SECRET_KEY=secretkey
+      - FLASK_ENV=${FLASK_ENV}
+      - WRITE_ENGINE=${WRITE_ENGINE}
+      - READER_ENGINE=${READER_ENGINE}
+      - SECRET_KEY=${SECRET_KEY}
     ports:
-      - "5001:5000"
-    depends_on:
-      - db
+      - target: 5000
+        published: 5001
+        protocol: tcp
+        mode: host
     networks:
       - bookstore_net
     deploy:
-      replicas: 2
+      replicas: 1
       restart_policy:
         condition: on-failure
 
   catalog-microservice:
-    build:
-      context: ../catalog-microservice
-      dockerfile: Dockerfile
-    image: catalog-microservice:latest
+    image: "${CATALOG_IMAGE}"
+    env_file:
+      - .env
     environment:
-      - FLASK_ENV=development
-      - WRITE_ENGINE=mysql+pymysql://bookstore_user:123@db/bookstore
-      - READER_ENGINE=mysql+pymysql://bookstore_user:123@db/bookstore
-      - SECRET_KEY=secretkey
+      - FLASK_ENV=${FLASK_ENV}
+      - WRITE_ENGINE=${WRITE_ENGINE}
+      - READER_ENGINE=${READER_ENGINE}
+      - SECRET_KEY=${SECRET_KEY}
     ports:
-      - "5002:5000"
-    depends_on:
-      - db
+      - target: 5000
+        published: 5002
+        protocol: tcp
+        mode: host
     networks:
       - bookstore_net
     deploy:
-      replicas: 2
+      replicas: 1
       restart_policy:
         condition: on-failure
 
   purchase-microservice:
-    build:
-      context: ../purchase-microservice
-      dockerfile: Dockerfile
-    image: purchase-microservice:latest
+    image: "${PURCHASE_IMAGE}"
+    env_file:
+      - .env
     environment:
-      - FLASK_ENV=development
-      - WRITE_ENGINE=mysql+pymysql://bookstore_user:123@db/bookstore
-      - READER_ENGINE=mysql+pymysql://bookstore_user:123@db/bookstore
-      - SECRET_KEY=secretkey
+      - FLASK_ENV=${FLASK_ENV}
+      - WRITE_ENGINE=${WRITE_ENGINE}
+      - READER_ENGINE=${READER_ENGINE}
+      - SECRET_KEY=${SECRET_KEY}
     ports:
-      - "5003:5000"
-    depends_on:
-      - db
+      - target: 5000
+        published: 5003
+        protocol: tcp
+        mode: host
     networks:
       - bookstore_net
     deploy:
-      replicas: 2
-      restart_policy:
-        condition: on-failure
-
-  db:
-    image: mysql:8.0
-    environment:
-      - MYSQL_ROOT_PASSWORD=123
-      - MYSQL_DATABASE=bookstore
-      - MYSQL_USER=bookstore_user
-      - MYSQL_PASSWORD=123
-    volumes:
-      - db_data:/var/lib/mysql
-    networks:
-      bookstore_net:
-        aliases:
-          - db
-    deploy:
-      placement:
-        constraints: [node.role == manager]
       replicas: 1
       restart_policy:
         condition: on-failure
 
   bookstore:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: bookstore-monolith:latest
+    image: "${BOOKSTORE_IMAGE}"
+    env_file:
+      - .env
     environment:
-      - FLASK_ENV=development
-      - SECRET_KEY=secretkey
-      - WRITE_ENGINE=mysql+pymysql://bookstore_user:123@db/bookstore
-      - READER_ENGINE=mysql+pymysql://bookstore_user:123@db/bookstore
-      - CREATION_DB=mysql+pymysql://bookstore_user:123@db/bookstore
-      - AUTH_SERVICE_URL=http://auth-microservice:5000/auth
-      - CATALOG_SERVICE_URL=http://catalog-microservice:5000
-      - PURCHASE_SERVICE_URL=http://purchase-microservice:5000/purchase
+      - FLASK_ENV=${FLASK_ENV}
+      - SECRET_KEY=${SECRET_KEY}
+      - WRITE_ENGINE=${WRITE_ENGINE}
+      - READER_ENGINE=${READER_ENGINE}
+      - CREATION_DB=${CREATION_DB}
+      - AUTH_SERVICE_URL=${AUTH_SERVICE_URL}
+      - CATALOG_SERVICE_URL=${CATALOG_SERVICE_URL}
+      - PURCHASE_SERVICE_URL=${PURCHASE_SERVICE_URL}
     ports:
-      - "5000:5000"
+      - target: 5000
+        published: 5000
+        protocol: tcp
+        mode: host
+    networks:
+      - bookstore_net
     depends_on:
       - auth-microservice
       - catalog-microservice
       - purchase-microservice
-      - db
-    networks:
-      - bookstore_net
     deploy:
-      replicas: 2
+      replicas: 1
       restart_policy:
         condition: on-failure
 
 networks:
   bookstore_net:
     driver: overlay
-
-volumes:
-  db_data:
+    attachable: true
