@@ -79,13 +79,30 @@ Re-engineer the BookStore Monolitica app, to be divided into 3 coordinating micr
 - **E**: Load Balancer Swarm (IP Nodo Master)
 - **F**: Autoscaled Instances by AWS
 - **G**: Containers on 3 AWS Instances (including Master)
+- **H**: Base de Datos MySQL como contenedor de EC2
+- **I**: Base de Datos MySQL en Aurora RDS.
 ```mermaid
 graph LR
+    %% Nodos con formas personalizadas
+    A["Browser"]
+    B{{"Nginx Proxy Reverso"}}
+    C["App Monolítica (Objetivo 1)"]
+    D{{"Load Balancer (Objetivo 2)"}}
+    E{{"Load Balancer Swarm (Nodo Master)"}}
+    F["Autoscaled Instances (AWS)"]
+    G["Containers en 3 Instancias AWS"]
+    H[(Base de Datos MySQL en EC2)]
+    I[(Base de Datos MySQL en Aurora RDS)]
+
+    %% Relaciones
     A --> B
     B --> C
     B --> D
     B --> E
     D --> F
     E --> G
+    C --> H
+    F --> I
+    G --> I
 ```
 
