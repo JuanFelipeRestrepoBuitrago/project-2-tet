@@ -73,26 +73,26 @@ Re-engineer the BookStore Monolitica app, to be divided into 3 coordinating micr
 
 ## Architectural Diagram
 - **A**: Browser
-- **B**: Nginx Proxy Reverso
-- **C**: App Monolítica Objetivo 1
-- **D**: Load Balancer Objetivo 2
-- **E**: Load Balancer Swarm (IP Nodo Master)
-- **F**: Autoscaled Instances by AWS
+- **B**: Reverse Nginx Proxy
+- **C**: Monoltih App (Objective 1)
+- **D**: Load Balancer (Objective 2)
+- **E**: Load Balancer Swarm (Ip Master Node)
+- **F**: Autoscaled Instances (AWS)
 - **G**: Containers on 3 AWS Instances (including Master)
-- **H**: Base de Datos MySQL como contenedor de EC2
-- **I**: Base de Datos MySQL en Aurora RDS.
+- **H**: MySQL Database in EC2 container
+- **I**: MySQL Database in Aurora RDS
 ```mermaid
 graph LR
-    %% Nodos con formas personalizadas
+    %% Custom Shapes for Nodes
     A["Browser"]
-    B{{"Nginx Proxy Reverso"}}
-    C["App Monolítica (Objetivo 1)"]
-    D{{"Load Balancer (Objetivo 2)"}}
-    E{{"Load Balancer Swarm (Nodo Master)"}}
+    B{{"Reverse Nginx Proxy"}}
+    C["Monoltih App (Objective 1)"]
+    D{{"Load Balancer (Objective 2)"}}
+    E{{"Load Balancer Swarm (Master Node)"}}
     F["Autoscaled Instances (AWS)"]
-    G["Containers en 3 Instancias AWS"]
-    H[(Base de Datos MySQL en EC2)]
-    I[(Base de Datos MySQL en Aurora RDS)]
+    G["Containers of 3 AWS Instances"]
+    H[(MySQL Database in EC2)]
+    I[(MySQL Database in Aurora RDS)]
 
     %% Relaciones
     A --> B
