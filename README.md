@@ -77,8 +77,8 @@ Re-engineer the BookStore Monolitica app, to be divided into 3 coordinating micr
 - **C**: App Monolítica Objetivo 1
 - **D**: Load Balancer Objetivo 2
 - **E**: Load Balancer Swarm (IP Nodo Master)
-- **F**: Instancias Autoescaladas por AWS
-- **G**: Contenedores en 3 Instancias AWS (incluye Master)
+- **F**: Autoscaled Instances by AWS
+- **G**: Containers on 3 AWS Instances (including Master)
 ```mermaid
 graph LR
     A --> B
